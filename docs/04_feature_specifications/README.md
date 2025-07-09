@@ -109,8 +109,9 @@ This directory contains detailed specifications for all features in the Great Ni
 ### Premium Edition
 Contact us for premium features:
 - **Email**: premium@greatnigeria.com
-- **Website**: [greatnigeria.com/premium](https://greatnigeria.com/premium)
-- **Documentation**: Available with premium license
+- **Website**: [greatnigeria.net](https://greatnigeria.net)
+- **Documentation**: [docs.greatnigeria.com](https://docs.greatnigeria.com)
+- **Live Demo**: Experience premium features on our live platform
 
 ## 📖 Additional Resources
 

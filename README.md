@@ -32,7 +32,7 @@ To become the primary gateway for educational and cultural preservation, serving
 
 ## 🌐 **Live Platform**
 
-> **Experience the complete platform at [www.greatnigeria.net](https://www.greatnigeria.net)**
+> **Experience the complete platform at [greatnigeria.net](https://greatnigeria.net)**
 >
 > See both Foundation and Premium features in action on our live deployment. The website showcases the full ecosystem including e-commerce, live streaming, AI recommendations, and cultural celebration features.
 
@@ -103,7 +103,7 @@ To become the primary gateway for educational and cultural preservation, serving
 
 ## 🚀 Premium Edition Features
 
-> **🌐 See the full platform in action at [www.greatnigeria.net](https://www.greatnigeria.net)**
+> **🌐 See the full platform in action at [greatnigeria.net](https://greatnigeria.net)**
 > *Experience both Foundation and Premium features on our live platform*
 
 > **Available separately for commercial use and advanced functionality**
@@ -163,8 +163,9 @@ To become the primary gateway for educational and cultural preservation, serving
 
 > **📞 Contact Information**
 > **Email**: premium@greatnigeria.com
-> **Website**: [greatnigeria.com/premium](https://greatnigeria.com/premium)
-> **Documentation**: Available with premium license
+> **Website**: [greatnigeria.net](https://greatnigeria.net)
+> **Documentation**: [docs.greatnigeria.com](https://docs.greatnigeria.com)
+> **Premium License**: Available with enterprise deployment
 
 ## 🚀 Quick Start
 
@@ -408,8 +409,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Documentation**: [docs.greatnigeria.com](https://docs.greatnigeria.com)
 - **Community Forum**: [community.greatnigeria.com](https://community.greatnigeria.com)
-- **Issues**: [GitHub Issues](https://github.com/yerenwgventures/GreatNigeriaLibrary/issues)
+- **Issues**: [GitHub Issues](https://github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/issues)
 - **Email**: support@greatnigeria.com
+- **Website**: [greatnigeria.net](https://greatnigeria.net)
 
 ---
 
