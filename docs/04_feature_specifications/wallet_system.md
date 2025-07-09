@@ -27,95 +27,62 @@ The Wallet System provides a comprehensive digital wallet solution within the Gr
 - **User Satisfaction**: 4.8+ wallet experience rating
 - **Transaction Speed**: <2 seconds for internal transfers
 
-## Technical Architecture
+## System Architecture
 
-### Database Schema
+### Core Wallet Components
 
-```sql
--- Main wallet accounts
-CREATE TABLE wallet_accounts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
-    points_balance DECIMAL(15,2) DEFAULT 0,
-    naira_balance DECIMAL(15,2) DEFAULT 0,
-    usd_balance DECIMAL(15,2) DEFAULT 0,
-    frozen_points DECIMAL(15,2) DEFAULT 0,
-    frozen_naira DECIMAL(15,2) DEFAULT 0,
-    frozen_usd DECIMAL(15,2) DEFAULT 0,
-    total_earned_points DECIMAL(15,2) DEFAULT 0,
-    total_spent_points DECIMAL(15,2) DEFAULT 0,
-    total_deposited_naira DECIMAL(15,2) DEFAULT 0,
-    total_withdrawn_naira DECIMAL(15,2) DEFAULT 0,
-    wallet_pin_hash VARCHAR(255),
-    pin_attempts INTEGER DEFAULT 0,
-    pin_locked_until TIMESTAMP WITH TIME ZONE,
-    daily_spend_limit DECIMAL(10,2) DEFAULT 50000, -- NGN
-    monthly_spend_limit DECIMAL(12,2) DEFAULT 500000, -- NGN
-    is_active BOOLEAN DEFAULT TRUE,
-    kyc_level INTEGER DEFAULT 1, -- 1=basic, 2=intermediate, 3=full
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Multi-Currency Wallet Management
+Comprehensive digital wallet system supporting multiple currencies:
 
--- Transaction history
-CREATE TABLE wallet_transactions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    wallet_id UUID REFERENCES wallet_accounts(id) ON DELETE CASCADE,
-    transaction_type VARCHAR(50) NOT NULL, -- credit, debit, transfer_in, transfer_out, earn, spend, deposit, withdraw
-    currency VARCHAR(10) NOT NULL, -- points, NGN, USD
-    amount DECIMAL(15,2) NOT NULL,
-    balance_before DECIMAL(15,2) NOT NULL,
-    balance_after DECIMAL(15,2) NOT NULL,
-    description TEXT NOT NULL,
-    reference_id VARCHAR(100) UNIQUE NOT NULL,
-    source_type VARCHAR(50), -- manual, marketplace, points_earning, external_payment, user_transfer
-    source_id UUID, -- references to orders, activities, payments, etc.
-    destination_wallet_id UUID REFERENCES wallet_accounts(id),
-    status VARCHAR(20) DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed', 'reversed')),
-    metadata JSONB,
-    processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Points Balance Management**: Earned points from platform activities with detailed tracking and history
+- **Naira Balance Support**: Real Nigerian currency storage and management with secure transactions
+- **Multi-Currency Capability**: Support for USD and other international currencies for global users
+- **Frozen Funds Management**: Secure fund freezing for pending transactions and dispute resolution
+- **Balance Tracking**: Comprehensive tracking of earned, spent, deposited, and withdrawn amounts
+- **Security Features**: PIN-based wallet protection with attempt limiting and security monitoring
 
--- External payment integrations
-CREATE TABLE wallet_payment_transactions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    wallet_id UUID REFERENCES wallet_accounts(id) ON DELETE CASCADE,
-    payment_provider VARCHAR(50) NOT NULL, -- paystack, flutterwave, squad
-    provider_reference VARCHAR(255) UNIQUE NOT NULL,
-    transaction_type VARCHAR(20) CHECK (transaction_type IN ('deposit', 'withdrawal')),
-    amount DECIMAL(15,2) NOT NULL,
-    currency VARCHAR(3) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled')),
-    provider_status VARCHAR(50),
-    callback_data JSONB,
-    fees DECIMAL(10,2) DEFAULT 0,
-    user_email VARCHAR(255),
-    user_phone VARCHAR(20),
-    payment_method VARCHAR(50),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Transaction Processing Engine
+Advanced transaction management system:
 
--- Transfer requests between users
-CREATE TABLE wallet_transfers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    transfer_reference VARCHAR(100) UNIQUE NOT NULL,
-    sender_wallet_id UUID REFERENCES wallet_accounts(id) ON DELETE CASCADE,
-    recipient_wallet_id UUID REFERENCES wallet_accounts(id) ON DELETE CASCADE,
-    currency VARCHAR(10) NOT NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    transfer_fee DECIMAL(10,2) DEFAULT 0,
-    description TEXT,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
-    requires_pin BOOLEAN DEFAULT TRUE,
-    initiated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    completed_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Real-Time Processing**: Instant transaction processing for internal platform transfers
+- **Transaction History**: Detailed transaction logs with comprehensive metadata and tracking
+- **Batch Processing**: Efficient batch processing for bulk transactions and automated payments
+- **Transaction Validation**: Multi-layer validation system ensuring transaction integrity and security
+- **Rollback Capability**: Secure transaction rollback for failed or disputed transactions
+- **Audit Trail**: Complete audit trail for all wallet activities and administrative actions
 
--- Scheduled/recurring transactions
-CREATE TABLE wallet_scheduled_transactions (
+#### Payment Gateway Integration
+Comprehensive payment processing with multiple Nigerian providers:
+
+- **Multi-Provider Support**: Integration with Paystack, Flutterwave, and Squad for diverse payment options
+- **Deposit Management**: Seamless fund deposits with real-time processing and confirmation
+- **Withdrawal Processing**: Secure withdrawal system with bank account verification and processing
+- **Fee Management**: Transparent fee calculation and automatic deduction for all transactions
+- **Provider Redundancy**: Automatic failover between payment providers for maximum uptime
+- **Callback Handling**: Robust webhook processing for real-time transaction status updates
+
+#### User-to-User Transfer System
+Peer-to-peer transfer capabilities within the platform:
+
+- **Instant Transfers**: Real-time transfers between platform users with immediate balance updates
+- **Transfer Limits**: Configurable daily and monthly transfer limits based on KYC verification levels
+- **PIN Security**: Mandatory PIN verification for all outgoing transfers and sensitive operations
+- **Transfer History**: Comprehensive transfer history with detailed transaction records
+- **Recipient Verification**: User verification system to prevent accidental transfers
+- **Transfer Fees**: Configurable transfer fee structure with transparent cost display
+
+#### Security and Compliance Framework
+Advanced security measures and regulatory compliance:
+
+- **KYC Integration**: Multi-level Know Your Customer verification with document upload and verification
+- **Spending Limits**: Configurable daily and monthly spending limits based on verification status
+- **Security Monitoring**: Real-time fraud detection and suspicious activity monitoring
+- **PIN Management**: Secure PIN creation, change, and recovery with attempt limiting
+- **Account Freezing**: Administrative tools for account suspension and fund freezing when necessary
+- **Compliance Reporting**: Automated compliance reporting for regulatory requirements
+
+#### Scheduled Transaction Management
+Automated and recurring transaction capabilities:
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     wallet_id UUID REFERENCES wallet_accounts(id) ON DELETE CASCADE,
     transaction_type VARCHAR(50) NOT NULL,

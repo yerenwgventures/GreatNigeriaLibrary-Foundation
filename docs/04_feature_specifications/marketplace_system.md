@@ -54,280 +54,91 @@ CREATE TABLE marketplace_products (
     is_unlimited_stock BOOLEAN DEFAULT FALSE,
     sku VARCHAR(100),
     weight DECIMAL(8,2), -- in kg
-    dimensions JSONB, -- {length, width, height}
-    shipping_required BOOLEAN DEFAULT TRUE,
-    digital_file_url TEXT,
-    digital_file_size INTEGER, -- in bytes
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'inactive', 'out_of_stock', 'discontinued')),
-    featured BOOLEAN DEFAULT FALSE,
-    featured_until TIMESTAMP WITH TIME ZONE,
-    tags TEXT[],
-    seo_title VARCHAR(255),
-    seo_description TEXT,
-    view_count INTEGER DEFAULT 0,
-    sales_count INTEGER DEFAULT 0,
-    rating_average DECIMAL(3,2) DEFAULT 0,
-    rating_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### E-commerce Transaction System
+Comprehensive order and payment processing:
 
--- Product categories
-CREATE TABLE marketplace_categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    parent_id UUID REFERENCES marketplace_categories(id),
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    image_url TEXT,
-    sort_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Shopping Cart Management**: Persistent cart functionality with item quantity and variant tracking
+- **Order Processing**: Complete order lifecycle from creation to fulfillment
+- **Payment Integration**: Multiple payment gateway support with secure transaction processing
+- **Order Tracking**: Real-time order status updates and delivery tracking
+- **Digital Product Delivery**: Automated delivery system for digital products and services
+- **Refund Management**: Streamlined refund and return processing with automated workflows
 
--- Product images
-CREATE TABLE marketplace_product_images (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES marketplace_products(id) ON DELETE CASCADE,
-    image_url TEXT NOT NULL,
-    alt_text TEXT,
-    is_primary BOOLEAN DEFAULT FALSE,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Search and Discovery Engine
+Advanced product discovery capabilities:
 
--- Product variants (size, color, etc.)
-CREATE TABLE marketplace_product_variants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES marketplace_products(id) ON DELETE CASCADE,
-    variant_name VARCHAR(100) NOT NULL,
-    variant_value VARCHAR(100) NOT NULL,
-    price_adjustment DECIMAL(10,2) DEFAULT 0,
-    stock_quantity INTEGER DEFAULT 0,
-    sku VARCHAR(100),
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Full-Text Search**: Comprehensive search across product titles, descriptions, and tags
+- **Category Filtering**: Hierarchical category navigation with advanced filtering options
+- **Price Range Filtering**: Dynamic price filtering with currency conversion support
+- **Vendor Filtering**: Search and filter products by specific vendors or seller ratings
+- **Recommendation Engine**: AI-powered product recommendations based on user behavior
+- **Trending Products**: Dynamic trending and featured product highlighting
 
--- Shopping cart
-CREATE TABLE marketplace_cart_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES marketplace_products(id) ON DELETE CASCADE,
-    variant_id UUID REFERENCES marketplace_product_variants(id),
-    quantity INTEGER NOT NULL DEFAULT 1,
-    price_at_time DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, product_id, variant_id)
-);
+#### Review and Rating System
+Community-driven quality assurance:
 
--- Orders
-CREATE TABLE marketplace_orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_number VARCHAR(50) UNIQUE NOT NULL,
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    vendor_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')),
-    payment_status VARCHAR(20) DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
-    total_amount DECIMAL(10,2) NOT NULL,
-    shipping_amount DECIMAL(10,2) DEFAULT 0,
-    tax_amount DECIMAL(10,2) DEFAULT 0,
-    discount_amount DECIMAL(10,2) DEFAULT 0,
-    currency VARCHAR(3) DEFAULT 'NGN',
-    payment_method VARCHAR(50),
-    payment_reference VARCHAR(255),
-    shipping_address JSONB,
-    billing_address JSONB,
-    tracking_number VARCHAR(100),
-    notes TEXT,
-    shipped_at TIMESTAMP WITH TIME ZONE,
-    delivered_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Product Reviews**: Detailed customer review system with text and rating components
+- **Vendor Ratings**: Comprehensive vendor performance tracking and public ratings
+- **Review Moderation**: Automated and manual review moderation for quality control
+- **Verified Purchase Reviews**: Enhanced credibility through verified purchase validation
+- **Review Analytics**: Detailed analytics for vendors to improve product quality
+- **Community Feedback**: User-driven feedback system for continuous improvement
 
--- Order items
-CREATE TABLE marketplace_order_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES marketplace_orders(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES marketplace_products(id),
-    variant_id UUID REFERENCES marketplace_product_variants(id),
-    quantity INTEGER NOT NULL,
-    price_per_item DECIMAL(10,2) NOT NULL,
-    total_price DECIMAL(10,2) NOT NULL,
-    product_title VARCHAR(255) NOT NULL,
-    product_sku VARCHAR(100),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Business Intelligence and Analytics
 
--- Product reviews
-CREATE TABLE marketplace_product_reviews (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    product_id UUID REFERENCES marketplace_products(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    order_id UUID REFERENCES marketplace_orders(id),
-    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
-    title VARCHAR(255),
-    review_text TEXT,
-    is_verified_purchase BOOLEAN DEFAULT FALSE,
-    is_approved BOOLEAN DEFAULT TRUE,
-    helpful_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(product_id, user_id, order_id)
-);
+#### Sales Performance Tracking
+Comprehensive business analytics for vendors and platform administrators:
 
--- Vendor profiles
-CREATE TABLE marketplace_vendor_profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
-    business_name VARCHAR(255) NOT NULL,
-    business_description TEXT,
-    business_type VARCHAR(50),
-    business_address JSONB,
-    business_phone VARCHAR(20),
-    business_email VARCHAR(255),
-    business_website TEXT,
-    tax_id VARCHAR(50),
-    bank_account_details JSONB,
-    commission_rate DECIMAL(5,2) DEFAULT 10.00,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'suspended', 'deactivated')),
-    rating_average DECIMAL(3,2) DEFAULT 0,
-    rating_count INTEGER DEFAULT 0,
-    total_sales DECIMAL(12,2) DEFAULT 0,
-    total_orders INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Revenue Analytics**: Detailed sales tracking with revenue breakdowns by product, category, and time period
+- **Performance Metrics**: Key performance indicators including conversion rates, average order value, and customer lifetime value
+- **Vendor Dashboards**: Personalized analytics dashboards for vendors to track their business performance
+- **Market Insights**: Platform-wide analytics showing trending products, popular categories, and market opportunities
+- **Financial Reporting**: Automated financial reports for commission tracking, tax reporting, and business planning
+- **Customer Behavior Analysis**: Detailed insights into customer purchasing patterns and preferences
 
--- Wishlist
-CREATE TABLE marketplace_wishlists (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES marketplace_products(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, product_id)
-);
+#### Inventory and Supply Chain Management
+Advanced inventory control and logistics:
 
--- Coupons and discounts
-CREATE TABLE marketplace_coupons (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    code VARCHAR(50) UNIQUE NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    discount_type VARCHAR(20) CHECK (discount_type IN ('percentage', 'fixed_amount')),
-    discount_value DECIMAL(10,2) NOT NULL,
-    minimum_order_amount DECIMAL(10,2),
-    maximum_discount_amount DECIMAL(10,2),
-    usage_limit INTEGER,
-    usage_count INTEGER DEFAULT 0,
-    user_usage_limit INTEGER DEFAULT 1,
-    starts_at TIMESTAMP WITH TIME ZONE,
-    expires_at TIMESTAMP WITH TIME ZONE,
-    is_active BOOLEAN DEFAULT TRUE,
-    applicable_categories UUID[],
-    applicable_products UUID[],
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Stock Management**: Real-time inventory tracking with automated low-stock alerts and reorder notifications
+- **Supplier Integration**: Direct integration with suppliers for automated inventory replenishment
+- **Warehouse Management**: Multi-warehouse support with location-based inventory tracking
+- **Shipping Integration**: Automated shipping calculations and carrier integration for seamless fulfillment
+- **Return Management**: Streamlined return processing with automated refund and restocking workflows
+- **Quality Control**: Inventory quality tracking with batch management and expiration date monitoring
 
--- Shipping zones and rates
-CREATE TABLE marketplace_shipping_zones (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    states TEXT[], -- Nigerian states
-    countries TEXT[], -- for international shipping
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Marketing and Promotion Tools
 
-CREATE TABLE marketplace_shipping_rates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    shipping_zone_id UUID REFERENCES marketplace_shipping_zones(id) ON DELETE CASCADE,
-    vendor_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    shipping_method VARCHAR(100) NOT NULL,
-    rate_type VARCHAR(20) CHECK (rate_type IN ('flat_rate', 'weight_based', 'order_total')),
-    base_rate DECIMAL(10,2) NOT NULL,
-    additional_rate DECIMAL(10,2) DEFAULT 0,
-    free_shipping_threshold DECIMAL(10,2),
-    delivery_time_min INTEGER, -- days
-    delivery_time_max INTEGER, -- days
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+#### Discount and Coupon Management
+Comprehensive promotional campaign system:
 
-### API Endpoints
+- **Coupon Creation**: Flexible coupon system with percentage and fixed amount discounts
+- **Promotional Campaigns**: Time-limited promotional campaigns with automatic activation and expiration
+- **Bulk Discount Rules**: Volume-based pricing with automatic discount application
+- **Category Promotions**: Category-wide promotional campaigns for seasonal sales and special events
+- **Vendor Promotions**: Individual vendor promotional tools for independent marketing campaigns
+- **Customer Segmentation**: Targeted promotions based on customer behavior and purchase history
 
-#### Product Management
+#### Shipping and Logistics Integration
+Advanced shipping and delivery management:
 
-```yaml
-# List products
-GET /api/v1/marketplace/products:
-  parameters:
-    - page: integer
-    - limit: integer
-    - category: string
-    - vendor: string
-    - min_price: number
-    - max_price: number
-    - sort: string (price_asc|price_desc|newest|popular|rating)
-    - search: string
-    - product_type: string
-  responses:
-    200:
-      description: Paginated list of products
+- **Shipping Zone Configuration**: Flexible shipping zones covering Nigerian states and international destinations
+- **Dynamic Rate Calculation**: Intelligent shipping rate calculation based on weight, distance, and order value
+- **Carrier Integration**: Direct integration with major Nigerian and international shipping carriers
+- **Delivery Tracking**: Real-time package tracking with customer notifications and updates
+- **Free Shipping Thresholds**: Configurable free shipping options to encourage larger orders
+- **Express Delivery Options**: Premium delivery services with guaranteed delivery timeframes
 
-# Get product details
-GET /api/v1/marketplace/products/{productId}:
-  responses:
-    200:
-      description: Product details with variants and reviews
-    404:
-      description: Product not found
+### API Integration and Services
 
-# Create product (vendor only)
-POST /api/v1/marketplace/products:
-  authentication: required
-  body:
-    type: object
-    required: [title, description, price, category_id]
-    properties:
-      title:
-        type: string
-        maxLength: 255
-      description:
-        type: string
-      price:
-        type: number
-        minimum: 0
-      category_id:
-        type: string
-        format: uuid
-      # ... other product fields
-  responses:
-    201:
-      description: Product created successfully
+#### RESTful API Architecture
+Comprehensive API system for marketplace functionality:
 
-# Update product
-PUT /api/v1/marketplace/products/{productId}:
-  authentication: required
-  authorization: vendor_owns_product
-  body:
-    type: object
-    # Same as create but optional fields
-  responses:
-    200:
-      description: Product updated successfully
-
-# Delete product
-DELETE /api/v1/marketplace/products/{productId}:
-  authentication: required
-  authorization: vendor_owns_product
-  responses:
-    204:
-      description: Product deleted successfully
-```
+- **Product Management APIs**: Complete CRUD operations for product creation, updating, and management
+- **Search and Filtering APIs**: Advanced search capabilities with multiple filtering and sorting options
+- **Category Management APIs**: Hierarchical category management with nested category support
+- **Vendor Management APIs**: Vendor registration, profile management, and performance tracking
+- **Authentication and Authorization**: Secure API access with role-based permissions and vendor ownership validation
+- **Pagination and Performance**: Optimized API responses with efficient pagination and caching strategies
 
 #### Shopping Cart
 
