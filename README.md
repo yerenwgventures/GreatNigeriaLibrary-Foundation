@@ -30,6 +30,19 @@ To become the primary gateway for educational and cultural preservation, serving
 - **Economic Empowerment** - Create income opportunities for educators, creators, and communities
 - **Global Recognition** - Establish Africa as a leader in educational technology innovation
 
+## 🌐 **Live Platform**
+
+> **Experience the complete platform at [www.greatnigeria.net](https://www.greatnigeria.net)**
+>
+> See both Foundation and Premium features in action on our live deployment. The website showcases the full ecosystem including e-commerce, live streaming, AI recommendations, and cultural celebration features.
+
+### **What You'll Find on the Live Platform:**
+- ✅ **Foundation Features** - All open-source features demonstrated
+- 💎 **Premium Features** - Advanced functionality in action
+- 📚 **Complete Content Library** - Full educational and cultural content
+- 🎯 **Real User Community** - Active learners and creators
+- 🚀 **Production Performance** - Enterprise-grade deployment
+
 > **📋 Note**: This is the **Foundation Edition** - a fully functional open-source platform. For advanced features like payment processing, live streaming, AI recommendations, and premium content management, see the [Premium Edition](#-premium-edition-features) section below.
 
 ## ✨ Foundation Features (Included)
@@ -89,6 +102,9 @@ To become the primary gateway for educational and cultural preservation, serving
 > **📖 [System Architecture Documentation](docs/01_system_architecture.md)**
 
 ## 🚀 Premium Edition Features
+
+> **🌐 See the full platform in action at [www.greatnigeria.net](https://www.greatnigeria.net)**
+> *Experience both Foundation and Premium features on our live platform*
 
 > **Available separately for commercial use and advanced functionality**
 > *Contact us for premium licensing and enterprise deployment*
@@ -159,9 +175,9 @@ To become the primary gateway for educational and cultural preservation, serving
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/yerenwgventures/GreatNigeriaLibrary.git
-cd GreatNigeriaLibrary
+# Clone the foundation repository
+git clone https://github.com/yerenwgventures/GreatNigeriaLibrary-Foundation.git
+cd GreatNigeriaLibrary-Foundation
 
 # Start the foundation platform
 docker-compose up -d
@@ -367,11 +383,11 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Clone and setup
-git clone https://github.com/yerenwgventures/GreatNigeriaLibrary.git
-cd GreatNigeriaLibrary
+git clone https://github.com/yerenwgventures/GreatNigeriaLibrary-Foundation.git
+cd GreatNigeriaLibrary-Foundation
 
 # Install dependencies
-cd foundation/backend && go mod download
+cd backend && go mod download
 cd ../frontend && npm install
 
 # Start development servers
