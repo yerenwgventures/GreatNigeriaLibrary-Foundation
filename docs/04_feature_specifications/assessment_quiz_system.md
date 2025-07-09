@@ -31,390 +31,91 @@ The Assessment and Quiz System provides comprehensive evaluation capabilities wi
 
 ### Technical Infrastructure
 
-#### Database Schema Design
-Comprehensive PostgreSQL schema supporting diverse assessment types:
+#### Assessment Management System
+Comprehensive assessment creation and management platform:
 
-```sql
--- Core quiz/assessment table
-CREATE TABLE assessments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    assessment_type VARCHAR(50) NOT NULL CHECK (assessment_type IN ('quiz', 'exam', 'practice', 'survey', 'formative', 'summative')),
-    content_id UUID REFERENCES contents(id),
-    course_id UUID REFERENCES courses(id),
-    chapter_id UUID REFERENCES chapters(id),
-    difficulty_level VARCHAR(20) CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
-    time_limit INTEGER, -- in minutes
-    max_attempts INTEGER DEFAULT 1,
-    passing_score DECIMAL(5,2) DEFAULT 70.00,
-    randomize_questions BOOLEAN DEFAULT FALSE,
-    show_correct_answers BOOLEAN DEFAULT TRUE,
-    immediate_feedback BOOLEAN DEFAULT TRUE,
-    require_all_questions BOOLEAN DEFAULT TRUE,
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('draft', 'active', 'archived')),
-    created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Assessment Types**: Support for multiple assessment formats including quizzes, exams, practice tests, surveys, formative and summative assessments
+- **Content Integration**: Seamless integration with course content, chapters, and learning materials for contextual assessments
+- **Difficulty Management**: Configurable difficulty levels from beginner to advanced with adaptive questioning capabilities
+- **Time Controls**: Flexible time limits with automatic submission and time tracking for performance analysis
+- **Attempt Management**: Configurable maximum attempts with attempt tracking and progress monitoring across multiple sessions
+- **Scoring Configuration**: Customizable scoring systems with passing thresholds and weighted question points
+- **Question Randomization**: Optional question randomization for enhanced assessment security and varied user experiences
+- **Feedback Systems**: Immediate or delayed feedback with detailed explanations and performance insights
 
--- Question bank with multiple types
-CREATE TABLE assessment_questions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID REFERENCES assessments(id) ON DELETE CASCADE,
-    question_type VARCHAR(30) NOT NULL CHECK (question_type IN ('multiple_choice', 'true_false', 'short_answer', 'essay', 'fill_blank', 'matching', 'ordering', 'drag_drop')),
-    question_text TEXT NOT NULL,
-    explanation TEXT,
-    points DECIMAL(4,2) DEFAULT 1.00,
-    required BOOLEAN DEFAULT TRUE,
-    order_index INTEGER NOT NULL,
-    media_url TEXT,
-    metadata JSONB, -- Additional question-specific data
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Question and Content Management
+Advanced question creation and content management system:
 
--- Answer options for multiple choice questions
-CREATE TABLE question_options (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    question_id UUID REFERENCES assessment_questions(id) ON DELETE CASCADE,
-    option_text TEXT NOT NULL,
-    is_correct BOOLEAN DEFAULT FALSE,
-    explanation TEXT,
-    order_index INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Question Types**: Comprehensive question format support including multiple choice, true/false, short answer, essay, fill-in-the-blank, matching, ordering, and drag-and-drop
+- **Rich Media Support**: Integration of images, videos, and audio content for enhanced question presentation and multimedia learning
+- **Answer Management**: Flexible answer option management with correct answer marking, explanations, and partial credit support
+- **Question Banking**: Centralized question repository with reusable questions across multiple assessments and courses
+- **Metadata Support**: Extensive metadata support for question categorization, tagging, and advanced search capabilities
+- **Content Versioning**: Version control for questions and assessments with change tracking and rollback functionality
+- **Collaborative Creation**: Multi-user question creation with review workflows and approval processes
 
--- User assessment attempts
-CREATE TABLE assessment_attempts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    assessment_id UUID REFERENCES assessments(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    attempt_number INTEGER NOT NULL,
-    start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    end_time TIMESTAMP WITH TIME ZONE,
-    status VARCHAR(20) DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'abandoned', 'expired')),
-    score DECIMAL(5,2),
-    max_score DECIMAL(5,2),
-    percentage DECIMAL(5,2),
-    passed BOOLEAN,
-    time_taken INTEGER, -- in seconds
-    ip_address INET,
-    user_agent TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Performance Analytics and Feedback
+Sophisticated analytics system for assessment performance tracking:
 
--- Individual question responses
-CREATE TABLE assessment_responses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    attempt_id UUID REFERENCES assessment_attempts(id) ON DELETE CASCADE,
-    question_id UUID REFERENCES assessment_questions(id) ON DELETE CASCADE,
-    user_answer JSONB NOT NULL, -- Flexible storage for different answer types
-    is_correct BOOLEAN,
-    points_earned DECIMAL(4,2) DEFAULT 0.00,
-    time_taken INTEGER, -- in seconds
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Attempt Tracking**: Detailed attempt tracking with start/end times, completion status, and performance metrics
+- **Response Analysis**: Individual question response analysis with correctness tracking and time-taken measurements
+- **Flexible Storage**: JSONB-based answer storage supporting diverse answer types and complex response structures
+- **Automated Feedback**: Intelligent feedback generation with correct/incorrect/partial classifications and explanatory content
+- **Performance Insights**: Comprehensive performance analytics with scoring, percentage calculations, and pass/fail determination
+- **User Analytics**: Individual user performance tracking with attempt history and progress monitoring across assessments
 
--- Detailed feedback and analytics
-CREATE TABLE assessment_feedback (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    attempt_id UUID REFERENCES assessment_attempts(id) ON DELETE CASCADE,
-    question_id UUID REFERENCES assessment_questions(id),
-    feedback_type VARCHAR(30) NOT NULL CHECK (feedback_type IN ('correct', 'incorrect', 'partial', 'hint', 'explanation')),
-    feedback_text TEXT NOT NULL,
-    automatically_generated BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+#### API Integration and Services
+Comprehensive RESTful API system for assessment management:
 
-#### API Architecture
-Comprehensive RESTful API supporting assessment lifecycle:
-
-```yaml
-# Assessment Management
-GET /api/v1/assessments:
-  parameters:
-    - content_id: UUID
-    - course_id: UUID
-    - type: string
-    - difficulty: string
-    - page: integer
-    - limit: integer
-  responses:
-    200:
-      description: Paginated list of available assessments
-
-POST /api/v1/assessments:
-  authentication: required
-  authorization: educator
-  body:
-    type: object
-    properties:
-      title: string
-      description: string
-      assessment_type: string
-      questions: array
-      settings: object
-
-# Assessment Taking
-POST /api/v1/assessments/{assessmentId}/attempts:
-  authentication: required
-  responses:
-    201:
-      description: New assessment attempt created
-
-GET /api/v1/assessments/{assessmentId}/attempts/{attemptId}:
-  authentication: required
-  responses:
-    200:
-      description: Current attempt status and questions
-
-POST /api/v1/assessments/{assessmentId}/attempts/{attemptId}/responses:
-  authentication: required
-  body:
-    type: object
-    properties:
-      question_id: UUID
-      answer: object
-      
-PUT /api/v1/assessments/{assessmentId}/attempts/{attemptId}/submit:
-  authentication: required
-  responses:
-    200:
-      description: Assessment completed with results
-
-# Analytics and Reporting
-GET /api/v1/assessments/{assessmentId}/analytics:
-  authentication: required
-  authorization: educator
-  responses:
-    200:
-      description: Comprehensive assessment performance analytics
-
-GET /api/v1/users/{userId}/assessment-history:
-  authentication: required
-  responses:
-    200:
-      description: User's assessment history and performance trends
-```
+- **Assessment Management APIs**: Complete CRUD operations for assessment creation, updating, and management with role-based access control
+- **Content Integration APIs**: Seamless integration with course content and learning materials for contextual assessment delivery
+- **Question Management APIs**: Advanced question creation and editing APIs with support for multiple question types and rich media content
+- **Attempt Management APIs**: Assessment attempt lifecycle management from initiation to completion with real-time progress tracking
+- **Response Recording APIs**: Flexible response recording system supporting diverse answer types with automatic validation and scoring
+- **Submission Processing APIs**: Automated assessment submission and scoring with immediate feedback generation and result calculation
+- **Analytics APIs**: Comprehensive analytics and reporting APIs with performance metrics, trend analysis, and detailed insights
+- **User Progress APIs**: Individual user progress tracking with attempt history, performance trends, and achievement monitoring
+- **Authentication Integration**: Secure API access with role-based permissions and attempt ownership validation
+- **Pagination Support**: Efficient pagination for large datasets with configurable page sizes and sorting options
 
 #### Frontend Component Architecture
 Modern React-based assessment interface:
 
-```typescript
-// Main assessment interface
-interface AssessmentPageProps {
-  assessmentId: string;
-  user: User;
-  mode: 'take' | 'review' | 'preview';
-}
+#### User Interface and Experience
+Modern, intuitive assessment interface and user experience:
 
-export const AssessmentPage: React.FC<AssessmentPageProps> = ({
-  assessmentId,
-  user,
-  mode
-}) => {
-  const [assessment, setAssessment] = useState<Assessment | null>(null);
-  const [currentAttempt, setCurrentAttempt] = useState<AssessmentAttempt | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+- **Responsive Design**: Mobile-first responsive design optimized for various devices and screen sizes with touch-friendly interactions
+- **Assessment Navigation**: Intuitive navigation system with question progression, review capabilities, and progress indicators
+- **Question Presentation**: Clean, accessible question presentation with support for rich media content and interactive elements
+- **Answer Input Systems**: Diverse answer input methods optimized for different question types with real-time validation
+- **Timer Integration**: Visual timer display with warnings and automatic submission for timed assessments
+- **Progress Tracking**: Real-time progress indicators showing completion status and remaining questions
+- **Accessibility Compliance**: Full accessibility support with screen reader compatibility and keyboard navigation
+- **Auto-Save Functionality**: Automatic progress saving to prevent data loss during assessment sessions
 
-  return (
-    <div className="assessment-page">
-      <AssessmentHeader 
-        assessment={assessment}
-        attempt={currentAttempt}
-        timeRemaining={timeRemaining}
-      />
-      <AssessmentProgress 
-        currentQuestion={currentQuestion}
-        totalQuestions={assessment?.questions?.length || 0}
-      />
-      <QuestionDisplay 
-        question={assessment?.questions?.[currentQuestion]}
-        answer={answers[assessment?.questions?.[currentQuestion]?.id]}
-        onAnswerChange={handleAnswerChange}
-        mode={mode}
-      />
-      <AssessmentNavigation 
-        currentQuestion={currentQuestion}
-        totalQuestions={assessment?.questions?.length || 0}
-        onQuestionChange={setCurrentQuestion}
-        onSubmit={handleSubmit}
-        canSubmit={mode === 'take'}
-      />
-    </div>
-  );
-};
+#### Assessment Delivery Components
+Comprehensive assessment presentation and interaction system:
 
-// Question display component with multiple types
-interface QuestionDisplayProps {
-  question: AssessmentQuestion;
-  answer?: any;
-  onAnswerChange: (questionId: string, answer: any) => void;
-  mode: 'take' | 'review' | 'preview';
-}
+- **Question Type Support**: Native support for multiple choice, true/false, short answer, essay, fill-in-the-blank, matching, ordering, and drag-and-drop questions
+- **Media Integration**: Seamless integration of images, videos, and audio content within questions and answer options
+- **Interactive Elements**: Advanced interactive components for complex question types with drag-and-drop and matching capabilities
+- **Feedback Systems**: Immediate and delayed feedback presentation with detailed explanations and performance insights
+- **Review Mode**: Comprehensive review interface allowing users to revisit questions and understand correct answers
+- **Preview Functionality**: Assessment preview capabilities for instructors and administrators before publication
+- **Adaptive Interface**: Dynamic interface adaptation based on question types and assessment configuration
+- **Performance Optimization**: Optimized rendering and loading for large assessments with efficient question pagination
 
-export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
-  question,
-  answer,
-  onAnswerChange,
-  mode
-}) => {
-  const renderQuestionContent = () => {
-    switch (question.question_type) {
-      case 'multiple_choice':
-        return (
-          <MultipleChoiceQuestion 
-            question={question}
-            selectedAnswer={answer}
-            onAnswerSelect={(option) => onAnswerChange(question.id, option)}
-            disabled={mode !== 'take'}
-          />
-        );
-      case 'true_false':
-        return (
-          <TrueFalseQuestion 
-            question={question}
-            selectedAnswer={answer}
-            onAnswerSelect={(value) => onAnswerChange(question.id, value)}
-            disabled={mode !== 'take'}
-          />
-        );
-      case 'short_answer':
-      case 'essay':
-        return (
-          <TextAnswerQuestion 
-            question={question}
-            answer={answer}
-            onAnswerChange={(text) => onAnswerChange(question.id, text)}
-            disabled={mode !== 'take'}
-            maxLength={question.question_type === 'short_answer' ? 500 : 5000}
-          />
-        );
-      case 'fill_blank':
-        return (
-          <FillBlankQuestion 
-            question={question}
-            answers={answer}
-            onAnswersChange={(answers) => onAnswerChange(question.id, answers)}
-            disabled={mode !== 'take'}
-          />
-        );
-      default:
-        return <div>Unsupported question type</div>;
-    }
-  };
+#### Results and Analytics Display
+Comprehensive results presentation and performance analytics:
 
-  return (
-    <div className="question-display">
-      <div className="question-header">
-        <h3>Question {question.order_index + 1}</h3>
-        <span className="points">{question.points} points</span>
-      </div>
-      <div className="question-content">
-        <div className="question-text">{question.question_text}</div>
-        {question.media_url && (
-          <div className="question-media">
-            <img src={question.media_url} alt="Question media" />
-          </div>
-        )}
-        {renderQuestionContent()}
-      </div>
-      {mode === 'review' && question.explanation && (
-        <div className="question-explanation">
-          <h4>Explanation:</h4>
-          <p>{question.explanation}</p>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Assessment results component
-interface AssessmentResultsProps {
-  attempt: AssessmentAttempt;
-  assessment: Assessment;
-  responses: AssessmentResponse[];
-}
-
-export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
-  attempt,
-  assessment,
-  responses
-}) => {
-  return (
-    <div className="assessment-results">
-      <div className="results-header">
-        <h2>Assessment Results</h2>
-        <div className="score-display">
-          <div className="score-circle">
-            <span className="percentage">{attempt.percentage}%</span>
-            <span className="score">{attempt.score}/{attempt.max_score}</span>
-          </div>
-          <div className="pass-status">
-            {attempt.passed ? (
-              <span className="passed">✓ Passed</span>
-            ) : (
-              <span className="failed">✗ Failed</span>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <div className="results-summary">
-        <div className="summary-stats">
-          <div className="stat">
-            <label>Time Taken:</label>
-            <span>{formatTime(attempt.time_taken)}</span>
-          </div>
-          <div className="stat">
-            <label>Correct Answers:</label>
-            <span>{responses.filter(r => r.is_correct).length}/{responses.length}</span>
-          </div>
-          <div className="stat">
-            <label>Attempt:</label>
-            <span>{attempt.attempt_number}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="question-breakdown">
-        <h3>Question Breakdown</h3>
-        {responses.map((response, index) => (
-          <QuestionResult 
-            key={response.id}
-            response={response}
-            question={assessment.questions.find(q => q.id === response.question_id)}
-            questionNumber={index + 1}
-          />
-        ))}
-      </div>
-
-      <div className="results-actions">
-        <button 
-          onClick={() => window.location.href = '/assessments'}
-          className="btn-primary"
-        >
-          Back to Assessments
-        </button>
-        {attempt.attempt_number < assessment.max_attempts && !attempt.passed && (
-          <button 
-            onClick={handleRetakeAssessment}
-            className="btn-secondary"
-          >
-            Retake Assessment
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-```
+- **Score Visualization**: Clear score presentation with percentage calculations, pass/fail status, and performance indicators
+- **Question Breakdown**: Detailed question-by-question analysis with correctness tracking and explanation display
+- **Performance Metrics**: Time tracking, attempt history, and comparative performance analysis across multiple attempts
+- **Progress Tracking**: Individual progress monitoring with completion rates and improvement tracking over time
+- **Feedback Integration**: Comprehensive feedback display with explanations, hints, and learning recommendations
+- **Export Capabilities**: Results export functionality for record keeping and external analysis
+- **Retake Management**: Intelligent retake options based on attempt limits and performance thresholds
+- **Achievement Recognition**: Performance-based achievement recognition and milestone tracking
 
 ## Assessment Types and Formats
 
