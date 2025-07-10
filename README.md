@@ -162,9 +162,9 @@ To become the primary gateway for educational and cultural preservation, serving
 - 💎 **Dedicated Support** - Priority support and custom development
 
 > **📞 Contact Information**
-> **Email**: premium@greatnigeria.com
+> **Email**: premium@greatnigeria.net
 > **Website**: [greatnigeria.net](https://greatnigeria.net)
-> **Documentation**: [docs.greatnigeria.com](https://docs.greatnigeria.com)
+> **Documentation**: [docs.greatnigeria.net](https://docs.greatnigeria.net)
 > **Premium License**: Available with enterprise deployment
 
 ## 🚀 Quick Start
@@ -407,10 +407,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [docs.greatnigeria.com](https://docs.greatnigeria.com)
-- **Community Forum**: [community.greatnigeria.com](https://community.greatnigeria.com)
+- **Documentation**: [docs.greatnigeria.net](https://docs.greatnigeria.net)
+- **Community Forum**: [community.greatnigeria.net](https://community.greatnigeria.net)
 - **Issues**: [GitHub Issues](https://github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/issues)
-- **Email**: support@greatnigeria.com
+- **Email**: support@greatnigeria.net
 - **Website**: [greatnigeria.net](https://greatnigeria.net)
 
 ---
