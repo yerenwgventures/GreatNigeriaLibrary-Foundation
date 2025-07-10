@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/auth/service"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // TwoFAHandler handles two-factor authentication related requests

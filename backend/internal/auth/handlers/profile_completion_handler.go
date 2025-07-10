@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/auth"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/response"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/auth"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/response"
 )
 
 // ProfileCompletionHandler handles profile completion-related requests

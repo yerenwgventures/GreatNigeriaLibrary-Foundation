@@ -8,13 +8,13 @@ RUN apk add --no-cache git ca-certificates
 WORKDIR /app
 
 # Copy go mod files
-COPY backend/go.mod backend/go.sum ./
+COPY go.mod go.sum ./
 
 # Download dependencies
 RUN go mod download
 
 # Copy foundation source code
-COPY backend/ ./
+COPY backend/ ./backend/
 COPY main.go ./
 
 # Build the foundation application
