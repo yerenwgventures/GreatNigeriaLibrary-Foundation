@@ -8,7 +8,7 @@ import (
         "github.com/sirupsen/logrus"
         "gorm.io/gorm"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
 )
 
 // FeedbackService defines the interface for feedback-related operations

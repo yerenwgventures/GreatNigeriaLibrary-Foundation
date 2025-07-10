@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 	"gorm.io/gorm"
 )
 
@@ -256,4 +256,4 @@ type JoinRequest struct {
 }
 
 // User model is now imported from shared models package
-// import "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+// import "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // UserServiceInterface defines the interface for user service operations needed by verification handler

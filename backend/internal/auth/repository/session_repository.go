@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // SessionRepository implements data access for user sessions

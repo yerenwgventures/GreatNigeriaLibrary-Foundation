@@ -5,8 +5,8 @@ import (
         "fmt"
         "time"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/repository"
 )
 
 // SubscriptionService defines the interface for subscription operations

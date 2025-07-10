@@ -6,9 +6,9 @@ import (
         "time"
 
         "github.com/gin-gonic/gin"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/auth"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/response"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/auth"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/response"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // VerificationHandler handles verification-related requests

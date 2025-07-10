@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/groups/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/groups/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/groups/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/groups/service"
 )
 
 // GroupHandler handles HTTP requests for group operations

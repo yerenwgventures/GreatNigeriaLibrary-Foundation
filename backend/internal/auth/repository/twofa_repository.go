@@ -3,8 +3,8 @@ package repository
 import (
 	"errors"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 	"gorm.io/gorm"
 )
 

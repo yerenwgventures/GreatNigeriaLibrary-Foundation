@@ -5,9 +5,9 @@ import (
         "strconv"
 
         "github.com/gin-gonic/gin"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/errors"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/errors"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // ContentAccessService defines the interface for content access service

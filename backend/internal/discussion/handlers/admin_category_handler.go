@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/service"
 )
 
 // AdminCategoryHandler handles admin-specific API requests for forum categories
@@ -30,15 +30,15 @@ func (h *AdminCategoryHandler) RegisterRoutes(router *gin.Engine, authMiddleware
 		// Category configuration
 		adminCategories.GET("/:id/config", h.GetCategoryConfig)
 		adminCategories.PUT("/:id/config", h.UpdateCategoryConfig)
-		
+
 		// Posting rules
 		adminCategories.GET("/:id/posting-rules", h.GetPostingRules)
 		adminCategories.PUT("/:id/posting-rules", h.UpdatePostingRules)
-		
+
 		// Auto moderation settings
 		adminCategories.GET("/:id/moderation", h.GetAutoModerationSettings)
 		adminCategories.PUT("/:id/moderation", h.UpdateAutoModerationSettings)
-		
+
 		// Category moderators
 		adminCategories.GET("/:id/moderators", h.GetCategoryModerators)
 		adminCategories.POST("/:id/moderators", h.AddCategoryModerator)
@@ -55,14 +55,14 @@ func (h *AdminCategoryHandler) GetCategoryConfig(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Get category config
 	config, err := h.discussionService.GetCategoryConfig(uint(categoryID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, config)
 }
 
@@ -74,14 +74,14 @@ func (h *AdminCategoryHandler) UpdateCategoryConfig(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Parse request body
 	var config models.CategoryConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Update config
 	updatedConfig, err := h.discussionService.CreateOrUpdateCategoryConfig(uint(categoryID), config)
 	if err != nil {
@@ -92,7 +92,7 @@ func (h *AdminCategoryHandler) UpdateCategoryConfig(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, updatedConfig)
 }
 
@@ -104,14 +104,14 @@ func (h *AdminCategoryHandler) GetPostingRules(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Get posting rules
 	rules, err := h.discussionService.GetPostingRules(uint(categoryID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, rules)
 }
 
@@ -123,14 +123,14 @@ func (h *AdminCategoryHandler) UpdatePostingRules(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Parse request body
 	var rules models.PostingRules
 	if err := c.ShouldBindJSON(&rules); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Update rules
 	updatedRules, err := h.discussionService.CreateOrUpdatePostingRules(uint(categoryID), rules)
 	if err != nil {
@@ -141,7 +141,7 @@ func (h *AdminCategoryHandler) UpdatePostingRules(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, updatedRules)
 }
 
@@ -153,14 +153,14 @@ func (h *AdminCategoryHandler) GetAutoModerationSettings(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Get auto-moderation settings
 	settings, err := h.discussionService.GetAutoModerationSettings(uint(categoryID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, settings)
 }
 
@@ -172,14 +172,14 @@ func (h *AdminCategoryHandler) UpdateAutoModerationSettings(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Parse request body
 	var settings models.AutoModerationSettings
 	if err := c.ShouldBindJSON(&settings); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Update settings
 	updatedSettings, err := h.discussionService.CreateOrUpdateAutoModerationSettings(uint(categoryID), settings)
 	if err != nil {
@@ -190,7 +190,7 @@ func (h *AdminCategoryHandler) UpdateAutoModerationSettings(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, updatedSettings)
 }
 
@@ -202,14 +202,14 @@ func (h *AdminCategoryHandler) GetCategoryModerators(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Get category moderators
 	moderators, err := h.discussionService.GetCategoryModerators(uint(categoryID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, moderators)
 }
 
@@ -221,7 +221,7 @@ func (h *AdminCategoryHandler) AddCategoryModerator(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	// Parse request body
 	var request struct {
 		UserID            uint `json:"userId" binding:"required"`
@@ -233,24 +233,24 @@ func (h *AdminCategoryHandler) AddCategoryModerator(c *gin.Context) {
 		CanEditPosts      bool `json:"canEditPosts"`
 		CanApproveContent bool `json:"canApproveContent"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Create moderator with permissions
 	moderator := models.CategoryModerator{
-		UserID:           request.UserID,
-		CanPinPosts:      request.CanPinPosts,
-		CanLockPosts:     request.CanLockPosts,
-		CanMovePosts:     request.CanMovePosts,
-		CanDeletePosts:   request.CanDeletePosts,
-		CanModerateUsers: request.CanModerateUsers,
-		CanEditPosts:     request.CanEditPosts,
+		UserID:            request.UserID,
+		CanPinPosts:       request.CanPinPosts,
+		CanLockPosts:      request.CanLockPosts,
+		CanMovePosts:      request.CanMovePosts,
+		CanDeletePosts:    request.CanDeletePosts,
+		CanModerateUsers:  request.CanModerateUsers,
+		CanEditPosts:      request.CanEditPosts,
 		CanApproveContent: request.CanApproveContent,
 	}
-	
+
 	// Add moderator
 	addedModerator, err := h.discussionService.AddCategoryModerator(uint(categoryID), request.UserID, moderator)
 	if err != nil {
@@ -261,7 +261,7 @@ func (h *AdminCategoryHandler) AddCategoryModerator(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, addedModerator)
 }
 
@@ -273,13 +273,13 @@ func (h *AdminCategoryHandler) UpdateCategoryModerator(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	userID, err := strconv.ParseUint(c.Param("userId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
-	
+
 	// Parse request body
 	var request struct {
 		CanPinPosts       bool `json:"canPinPosts"`
@@ -290,23 +290,23 @@ func (h *AdminCategoryHandler) UpdateCategoryModerator(c *gin.Context) {
 		CanEditPosts      bool `json:"canEditPosts"`
 		CanApproveContent bool `json:"canApproveContent"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Create moderator with updated permissions
 	moderator := models.CategoryModerator{
-		CanPinPosts:      request.CanPinPosts,
-		CanLockPosts:     request.CanLockPosts,
-		CanMovePosts:     request.CanMovePosts,
-		CanDeletePosts:   request.CanDeletePosts,
-		CanModerateUsers: request.CanModerateUsers,
-		CanEditPosts:     request.CanEditPosts,
+		CanPinPosts:       request.CanPinPosts,
+		CanLockPosts:      request.CanLockPosts,
+		CanMovePosts:      request.CanMovePosts,
+		CanDeletePosts:    request.CanDeletePosts,
+		CanModerateUsers:  request.CanModerateUsers,
+		CanEditPosts:      request.CanEditPosts,
 		CanApproveContent: request.CanApproveContent,
 	}
-	
+
 	// Update moderator
 	updatedModerator, err := h.discussionService.UpdateCategoryModerator(uint(categoryID), uint(userID), moderator)
 	if err != nil {
@@ -317,7 +317,7 @@ func (h *AdminCategoryHandler) UpdateCategoryModerator(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, updatedModerator)
 }
 
@@ -329,19 +329,19 @@ func (h *AdminCategoryHandler) RemoveCategoryModerator(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid category ID"})
 		return
 	}
-	
+
 	userID, err := strconv.ParseUint(c.Param("userId"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
-	
+
 	// Remove moderator
 	err = h.discussionService.RemoveCategoryModerator(uint(categoryID), uint(userID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Moderator removed successfully"})
 }

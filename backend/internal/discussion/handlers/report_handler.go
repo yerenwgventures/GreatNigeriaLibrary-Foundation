@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/service"
 )
 
 // ReportHandler defines the handler for report endpoints

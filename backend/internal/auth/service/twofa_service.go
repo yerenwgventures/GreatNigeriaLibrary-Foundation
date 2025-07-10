@@ -6,9 +6,9 @@ import (
         "math/big"
         "time"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/auth/repository"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
         "github.com/pquerna/otp/totp"
 )
 

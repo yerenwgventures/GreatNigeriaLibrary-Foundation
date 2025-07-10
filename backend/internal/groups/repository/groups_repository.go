@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/groups/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/groups/models"
 	"gorm.io/gorm"
 )
 

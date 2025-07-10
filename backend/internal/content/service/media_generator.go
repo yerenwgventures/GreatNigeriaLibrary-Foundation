@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/repository"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
 )
 
 // MediaGenerator defines the interface for generating media from content

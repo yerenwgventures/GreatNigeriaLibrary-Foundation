@@ -5,14 +5,14 @@ import (
         "os"
 
         "github.com/gin-gonic/gin"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/auth/handlers"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/auth/repository"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/auth/service"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/config"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/database"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/middleware"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/handlers"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/service"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/database"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/middleware"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
         "github.com/joho/godotenv"
 )
 

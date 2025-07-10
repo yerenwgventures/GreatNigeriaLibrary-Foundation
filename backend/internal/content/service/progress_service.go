@@ -3,10 +3,10 @@ package service
 import (
         "time"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/repository"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/errors"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/errors"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
 // ProgressService handles progress-related business logic

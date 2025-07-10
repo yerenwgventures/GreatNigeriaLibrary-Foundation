@@ -7,8 +7,8 @@ import (
         "regexp"
         "strings"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/content/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
 )
 
 // ContentRenderer defines the interface for content rendering services

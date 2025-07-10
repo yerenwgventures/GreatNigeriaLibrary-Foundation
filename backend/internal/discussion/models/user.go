@@ -5,4 +5,4 @@ package models
 // - Username, Email, DisplayName, ProfileImageURL, Bio, IsActive, LastSeenAt, Reputation
 //
 // Import the shared User model:
-// import "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+// import "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"

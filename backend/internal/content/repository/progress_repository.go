@@ -3,7 +3,7 @@ package repository
 import (
         "time"
         
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
         "gorm.io/gorm"
 )
 

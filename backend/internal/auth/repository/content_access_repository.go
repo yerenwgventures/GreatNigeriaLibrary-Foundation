@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 	"gorm.io/gorm"
 )
 

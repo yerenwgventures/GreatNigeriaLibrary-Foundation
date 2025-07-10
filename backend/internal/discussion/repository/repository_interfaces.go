@@ -1,7 +1,7 @@
 package repository
 
 import (
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/internal/discussion/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
 )
 
 // TopicRepository defines the interface for topic-related database operations

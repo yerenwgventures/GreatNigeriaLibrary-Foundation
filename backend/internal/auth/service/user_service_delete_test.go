@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/pkg/common/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
