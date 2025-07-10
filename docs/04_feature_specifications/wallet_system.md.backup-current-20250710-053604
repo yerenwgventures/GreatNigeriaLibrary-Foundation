@@ -143,38 +143,108 @@ CREATE INDEX idx_wallet_security_logs_wallet_id ON wallet_security_logs(wallet_i
 
 #### Wallet Management System
 Comprehensive digital wallet functionality with secure transaction processing:
+# Get wallet balance and details
+GET /api/v1/wallet:
+  authentication: required
+  responses:
+    200:
+      description: Wallet details with balances
+      schema:
+        type: object
+        properties:
+          id:
+            type: string
+            format: uuid
+          user_id:
+            type: string
+            format: uuid
+          points_balance:
+            type: number
+          naira_balance:
+            type: number
+          usd_balance:
+            type: number
+          frozen_points:
+            type: number
+          frozen_naira:
+            type: number
+          total_earned_points:
+            type: number
+          daily_spend_limit:
+            type: number
+          monthly_spend_limit:
+            type: number
+          kyc_level:
+            type: integer
 
-- **Balance Inquiry**: Get current wallet balances across all supported currencies
-- **Transaction History**: Comprehensive transaction history with filtering and search capabilities
-- **Fund Transfer**: Secure peer-to-peer transfers with verification and confirmation
-- **Deposit Management**: Multiple deposit methods including bank transfer and card payments
-- **Withdrawal Processing**: Secure withdrawal to bank accounts with verification requirements
-- **PIN Management**: Wallet PIN setup, change, and security management
-- **Security Monitoring**: Real-time security monitoring and fraud detection
-- **Currency Exchange**: Multi-currency support with real-time exchange rates
+# Get transaction history
+GET /api/v1/wallet/transactions:
+  authentication: required
+  parameters:
+    - page: integer
+    - limit: integer
+    - type: string
+    - currency: string
+    - from_date: string (ISO date)
+    - to_date: string (ISO date)
+  responses:
+    200:
+      description: Paginated transaction history
 
-### Security and Compliance
-Advanced security features for financial transactions:
+# Create wallet PIN
+POST /api/v1/wallet/pin:
+  authentication: required
+  body:
+    type: object
+    required: [pin, confirm_pin]
+    properties:
+      pin:
+        type: string
+        pattern: '^[0-9]{4,6}$'
+      confirm_pin:
+        type: string
+        pattern: '^[0-9]{4,6}$'
+  responses:
+    200:
+      description: PIN created successfully
 
-- **Balance Management**: Real-time balance tracking across multiple currencies with detailed breakdowns
-- **Fund Transfers**: Secure peer-to-peer transfers with PIN verification and transaction limits
-- **Deposit Processing**: Multiple deposit methods with instant confirmation and receipt generation
-- **Withdrawal Management**: Secure withdrawal processing with bank verification and compliance checks
-- **PIN Security**: Wallet PIN management with attempt limiting and security monitoring
-- **Transaction Limits**: Configurable daily and monthly transaction limits for security
-- **Currency Support**: Multi-currency wallet supporting Points, Naira, and USD
-- **Fraud Detection**: Real-time fraud detection and prevention with automated alerts
+# Verify wallet PIN
+POST /api/v1/wallet/pin/verify:
+  authentication: required
+  body:
+    type: object
+    required: [pin]
+    properties:
+      pin:
+        type: string
+        pattern: '^[0-9]{4,6}$'
+  responses:
+    200:
+      description: PIN verified successfully
+    400:
+      description: Invalid PIN
+    423:
+      description: Wallet locked due to too many attempts
 
-#### Money Transfers
-Secure peer-to-peer transfer functionality:
-- **Transfer Processing**: Instant transfers between platform users with real-time confirmation
-- **Transaction History**: Comprehensive transaction history with filtering and export capabilities
-- **PIN Management**: Secure PIN creation, verification, and change functionality
-- **Security Monitoring**: Real-time monitoring of wallet activities and security events
-- **Balance Tracking**: Multi-currency balance tracking with frozen fund management
-- **Compliance Features**: KYC level tracking and transaction limit enforcement
-- **Audit Trail**: Complete audit trail for all wallet operations and security events
-- **API Security**: Comprehensive API security with authentication and authorization
+# Change wallet PIN
+PUT /api/v1/wallet/pin:
+  authentication: required
+  body:
+    type: object
+    required: [current_pin, new_pin, confirm_new_pin]
+    properties:
+      current_pin:
+        type: string
+      new_pin:
+        type: string
+        pattern: '^[0-9]{4,6}$'
+      confirm_new_pin:
+        type: string
+        pattern: '^[0-9]{4,6}$'
+  responses:
+    200:
+      description: PIN changed successfully
+```
 
 #### Money Transfers
 

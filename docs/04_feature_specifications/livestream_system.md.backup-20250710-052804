@@ -83,23 +83,97 @@ Advanced content organization and discovery system:
 
 #### Stream Management API
 Comprehensive RESTful API for stream lifecycle management:
+# Create new stream
+POST /api/v1/streams:
+  authentication: required
+  body:
+    type: object
+    required: [title]
+    properties:
+      title:
+        type: string
+        maxLength: 255
+      description:
+        type: string
+        maxLength: 2000
+      category:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+      scheduled_start_time:
+        type: string
+        format: date-time
+      is_premium:
+        type: boolean
+      allow_chat:
+        type: boolean
+      allow_gifts:
+        type: boolean
+      visibility:
+        type: string
+        enum: [public, unlisted, private]
+  responses:
+    201:
+      description: Stream created with RTMP details
 
-- **Stream Creation**: Create new live streams with scheduling and configuration options
-- **Stream Control**: Start, stop, and manage live streaming sessions with real-time controls
-- **Stream Discovery**: Browse and search live streams with filtering and categorization
-- **Viewer Management**: Track viewers, manage chat, and handle real-time interactions
-- **Gift System**: Virtual gift sending and receiving with creator monetization
-- **Analytics API**: Stream performance analytics and viewer engagement metrics
-- **Moderation Tools**: Content moderation and community management capabilities
-- **Recording Management**: Stream recording and archive management functionality
-- **Stream Creation**: Create new live streams with title, description, and scheduling options
-- **Stream Control**: Start and stop streaming sessions with real-time status updates
-- **Stream Discovery**: Browse live and scheduled streams with category filtering
-- **Stream Details**: Get comprehensive stream information including viewer count and status
-- **Stream Management**: Update stream settings and configuration during live sessions
-- **Premium Streams**: Support for paid premium streaming with access control
-- **Stream Analytics**: Real-time analytics and performance metrics for creators
-- **Stream Moderation**: Content moderation tools and community management features
+# Get stream details
+GET /api/v1/streams/{streamId}:
+  responses:
+    200:
+      description: Stream details including stats
+    404:
+      description: Stream not found
+
+# Update stream
+PUT /api/v1/streams/{streamId}:
+  authentication: required
+  authorization: creator_owns_stream
+  body:
+    type: object
+    properties:
+      title:
+        type: string
+      description:
+        type: string
+      category:
+        type: string
+      tags:
+        type: array
+      # ... other updatable fields
+  responses:
+    200:
+      description: Stream updated successfully
+
+# Start/stop stream
+POST /api/v1/streams/{streamId}/status:
+  authentication: required
+  authorization: creator_owns_stream
+  body:
+    type: object
+    required: [action]
+    properties:
+      action:
+        type: string
+        enum: [start, stop]
+  responses:
+    200:
+      description: Stream status updated
+
+# List active streams
+GET /api/v1/streams:
+  parameters:
+    - status: string (live|scheduled|all)
+    - category: string
+    - creator: string
+    - page: integer
+    - limit: integer
+    - sort: string (viewers|newest|trending)
+  responses:
+    200:
+      description: List of streams with pagination
+```
 
 #### Live Chat
 
