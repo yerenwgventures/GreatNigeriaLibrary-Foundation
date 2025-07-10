@@ -1,4 +1,4 @@
-import { client } from './client';
+import apiClient from './client';
 
 // Affiliate interfaces
 export interface ReferralCode {
@@ -158,27 +158,27 @@ export interface UpdateProductAffiliateSettingsRequest {
 
 // API functions for referral codes
 export const getReferralCodes = async (): Promise<ReferralCode[]> => {
-  const response = await client.get('/affiliate/referral-codes');
+  const response = await apiClient.get('/affiliate/referral-codes');
   return response.data;
 };
 
 export const getReferralCodeById = async (id: string): Promise<ReferralCode> => {
-  const response = await client.get(`/affiliate/referral-codes/${id}`);
+  const response = await apiClient.get(`/affiliate/referral-codes/${id}`);
   return response.data;
 };
 
 export const createReferralCode = async (request: CreateReferralCodeRequest): Promise<ReferralCode> => {
-  const response = await client.post('/affiliate/referral-codes', request);
+  const response = await apiClient.post('/affiliate/referral-codes', request);
   return response.data;
 };
 
 export const updateReferralCode = async (id: string, request: UpdateReferralCodeRequest): Promise<ReferralCode> => {
-  const response = await client.put(`/affiliate/referral-codes/${id}`, request);
+  const response = await apiClient.put(`/affiliate/referral-codes/${id}`, request);
   return response.data;
 };
 
 export const deleteReferralCode = async (id: string): Promise<void> => {
-  await client.delete(`/affiliate/referral-codes/${id}`);
+  await apiClient.delete(`/affiliate/referral-codes/${id}`);
 };
 
 // API functions for referrals
@@ -188,14 +188,14 @@ export const getReferrals = async (
   status?: string,
   type?: 'membership' | 'product'
 ): Promise<{ referrals: Referral[]; total: number; page: number; totalPages: number }> => {
-  const response = await client.get('/affiliate/referrals', {
+  const response = await apiClient.get('/affiliate/referrals', {
     params: { page, limit, status, type }
   });
   return response.data;
 };
 
 export const getReferralById = async (id: string): Promise<Referral> => {
-  const response = await client.get(`/affiliate/referrals/${id}`);
+  const response = await apiClient.get(`/affiliate/referrals/${id}`);
   return response.data;
 };
 
@@ -206,32 +206,32 @@ export const getCommissions = async (
   status?: string,
   type?: 'membership' | 'product'
 ): Promise<{ commissions: Commission[]; total: number; page: number; totalPages: number }> => {
-  const response = await client.get('/affiliate/commissions', {
+  const response = await apiClient.get('/affiliate/commissions', {
     params: { page, limit, status, type }
   });
   return response.data;
 };
 
 export const getCommissionById = async (id: string): Promise<Commission> => {
-  const response = await client.get(`/affiliate/commissions/${id}`);
+  const response = await apiClient.get(`/affiliate/commissions/${id}`);
   return response.data;
 };
 
-export const withdrawCommission = async (request: WithdrawCommissionRequest): Promise<{ 
-  transactionId: string; 
+export const withdrawCommission = async (request: WithdrawCommissionRequest): Promise<{
+  transactionId: string;
   status: string;
   amount: number;
   fee: number;
   netAmount: number;
   estimatedArrivalDate: string;
 }> => {
-  const response = await client.post('/affiliate/commissions/withdraw', request);
+  const response = await apiClient.post('/affiliate/commissions/withdraw', request);
   return response.data;
 };
 
 // API functions for affiliate stats
 export const getAffiliateStats = async (type?: 'membership' | 'product'): Promise<AffiliateStats> => {
-  const response = await client.get('/affiliate/stats', {
+  const response = await apiClient.get('/affiliate/stats', {
     params: { type }
   });
   return response.data;
@@ -239,19 +239,19 @@ export const getAffiliateStats = async (type?: 'membership' | 'product'): Promis
 
 // API functions for affiliate settings
 export const getAffiliateSettings = async (): Promise<AffiliateSettings> => {
-  const response = await client.get('/affiliate/settings');
+  const response = await apiClient.get('/affiliate/settings');
   return response.data;
 };
 
 // API function to apply a referral code
 export const applyReferralCode = async (code: string): Promise<{ success: boolean; message: string }> => {
-  const response = await client.post('/affiliate/apply-code', { code });
+  const response = await apiClient.post('/affiliate/apply-code', { code });
   return response.data;
 };
 
 // API function to get referral link
 export const getReferralLink = async (codeId?: string, productId?: string): Promise<{ link: string; code: string }> => {
-  const response = await client.get('/affiliate/referral-link', {
+  const response = await apiClient.get('/affiliate/referral-link', {
     params: { codeId, productId }
   });
   return response.data;
@@ -259,26 +259,26 @@ export const getReferralLink = async (codeId?: string, productId?: string): Prom
 
 // Membership affiliate functions
 export const getMembershipPlans = async (): Promise<MembershipPlan[]> => {
-  const response = await client.get('/affiliate/membership/plans');
+  const response = await apiClient.get('/affiliate/membership/plans');
   return response.data;
 };
 
 export const getMembershipAffiliateStats = async (): Promise<AffiliateStats> => {
-  const response = await client.get('/affiliate/membership/stats');
+  const response = await apiClient.get('/affiliate/membership/stats');
   return response.data;
 };
 
 // Marketplace affiliate functions
 export const getSellerProducts = async (): Promise<AffiliateProduct[]> => {
-  const response = await client.get('/affiliate/marketplace/my-products');
+  const response = await apiClient.get('/affiliate/marketplace/my-products');
   return response.data;
 };
 
 export const updateProductAffiliateSettings = async (
-  productId: string, 
+  productId: string,
   settings: UpdateProductAffiliateSettingsRequest
 ): Promise<ProductAffiliateSettings> => {
-  const response = await client.post(`/affiliate/marketplace/products/${productId}/settings`, settings);
+  const response = await apiClient.post(`/affiliate/marketplace/products/${productId}/settings`, settings);
   return response.data;
 };
 
@@ -287,14 +287,14 @@ export const getProductsWithAffiliatePrograms = async (
   limit = 10,
   category?: string
 ): Promise<{ products: AffiliateProduct[]; total: number; page: number; totalPages: number }> => {
-  const response = await client.get('/affiliate/marketplace/products', {
+  const response = await apiClient.get('/affiliate/marketplace/products', {
     params: { page, limit, category }
   });
   return response.data;
 };
 
 export const getMarketplaceAffiliateStats = async (): Promise<AffiliateStats> => {
-  const response = await client.get('/affiliate/marketplace/stats');
+  const response = await apiClient.get('/affiliate/marketplace/stats');
   return response.data;
 };
 
@@ -304,7 +304,7 @@ export const getAffiliateDashboard = async (): Promise<{
   marketplace: AffiliateStats;
   combined: AffiliateStats;
 }> => {
-  const response = await client.get('/affiliate/dashboard');
+  const response = await apiClient.get('/affiliate/dashboard');
   return response.data;
 };
 
