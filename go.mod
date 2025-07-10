@@ -58,4 +58,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/yerenwgventures/GreatNigeriaLibrary-Foundation => ./
+replace github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend => ./backend

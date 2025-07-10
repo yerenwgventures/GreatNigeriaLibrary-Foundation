@@ -1,0 +1,27 @@
+=== PRE-DOCKER DEPLOYMENT BACKUP MANIFEST ===
+Backup created: Thu, Jul 10, 2025  5:20:10 PM
+Purpose: Complete backup before Docker deployment testing
+Location: backups/pre-docker-deployment-20250710-171957
+
+Files backed up:
+backups/pre-docker-deployment-20250710-171957/backend_backup/cmd/api-gateway/main.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/cmd/api-gateway/main.go.backup-20250428-050738
+backups/pre-docker-deployment-20250710-171957/backend_backup/cmd/auth-service/main.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/cmd/content-service/main.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/cmd/discussion-service/main.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/auth.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/account_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/account_handler_test.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/content_access_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/profile_completion_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/role_handlers.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/role_handlers_test.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/session_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/twofa_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/user_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/user_handler.go.backup-20250709-135223
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/verification_handler.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/handlers/verification_types.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/repository/content_access_repository.go
+backups/pre-docker-deployment-20250710-171957/backend_backup/internal/auth/repository/session_repository.go
+... and more

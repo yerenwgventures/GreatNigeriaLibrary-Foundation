@@ -6,19 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	
+
 	// Foundation services
-	authHandlers "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/handlers"
-	authRepository "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/repository"
-	authService "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/service"
-
-	contentHandlers "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/handlers"
-	contentRepository "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
-	contentService "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/service"
-
-	discussionHandlers "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/handlers"
-	discussionRepository "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/repository"
-	discussionService "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/service"
+	authHandlers "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/handlers"
+	authRepository "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/repository"
+	authService "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/service"
 
 	// Shared packages
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
@@ -42,7 +34,7 @@ func main() {
 
 	// Initialize logger
 	appLogger := logger.New(logger.ParseLogLevel(cfg.Logging.Level))
-	
+
 	// Initialize database
 	dbConfig := &database.Config{
 		Host:            cfg.Database.Host,
@@ -55,7 +47,7 @@ func main() {
 		MaxIdleConns:    cfg.Database.MaxIdleConns,
 		ConnMaxLifetime: cfg.Database.ConnMaxLifetime,
 	}
-	
+
 	dbConn, err := database.NewConnection(dbConfig)
 	if err != nil {
 		appLogger.Fatal("Failed to connect to database: " + err.Error())
@@ -91,7 +83,7 @@ func main() {
 	}
 
 	router := gin.New()
-	
+
 	// Add middleware
 	router.Use(middleware.CORS())
 	router.Use(middleware.RequestLogger(appLogger))
@@ -100,7 +92,7 @@ func main() {
 
 	// API routes
 	api := router.Group("/api/v1")
-	
+
 	// Foundation routes only
 	setupFoundationRoutes(api, userHandler)
 
