@@ -28,470 +28,105 @@ The Celebrate Nigeria feature is a comprehensive digital repository showcasing N
 
 ## Technical Architecture
 
-### Database Schema
+### Cultural Content Management System
+Comprehensive platform for celebrating Nigerian heritage and achievements:
 
-#### Core Tables
+#### Entry Management System
+Advanced content management for diverse celebration types:
 
-```sql
--- Main celebration entries table
-CREATE TABLE celebration_entries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    entry_type VARCHAR(20) NOT NULL CHECK (entry_type IN ('person', 'place', 'event')),
-    slug VARCHAR(100) UNIQUE NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    short_description TEXT NOT NULL,
-    full_description TEXT NOT NULL,
-    primary_image_url TEXT,
-    location VARCHAR(255),
-    featured_rank INTEGER DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
-    view_count INTEGER DEFAULT 0,
-    like_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- **Entry Types**: Support for people, places, and events with specialized data structures for each category
+- **Content Structure**: Rich content management with titles, descriptions, multimedia galleries, and detailed metadata
+- **Geographic Integration**: Location-based content organization with coordinate support and address management
+- **Status Management**: Content workflow with draft, published, and archived states for editorial control
+- **Featured Content**: Ranking system for highlighting significant entries with community and editorial curation
+- **Engagement Tracking**: Comprehensive engagement metrics including views, likes, and community interactions
+- **SEO Optimization**: URL-friendly slugs and search engine optimization for content discoverability
 
--- Categories for organizing entries
-CREATE TABLE celebration_categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    parent_id UUID REFERENCES celebration_categories(id),
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    image_url TEXT,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Specialized Content Types
+Tailored data structures for different celebration categories:
 
--- Many-to-many relationship between entries and categories
-CREATE TABLE celebration_entry_categories (
-    entry_id UUID REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    category_id UUID REFERENCES celebration_categories(id) ON DELETE CASCADE,
-    PRIMARY KEY (entry_id, category_id)
-);
+- **People Entries**: Biographical information including birth/death dates, professions, achievements, contributions, education, and related links
+- **Place Entries**: Geographic data with coordinates, addresses, visiting information, accessibility details, and historical context
+- **Event Entries**: Event-specific information including dates, recurrence patterns, organizers, contact information, and historical significance
+- **Fact Management**: Key facts and highlights system with structured label-value pairs and custom ordering
+- **Media Integration**: Comprehensive media support for images, videos, audio, and documents with captions and accessibility features
+- **Category Organization**: Hierarchical category system with nested organization and flexible content association
 
--- Type-specific data for people
-CREATE TABLE person_entries (
-    celebration_entry_id UUID PRIMARY KEY REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    birth_date DATE,
-    death_date DATE,
-    profession VARCHAR(255),
-    achievements TEXT,
-    contributions TEXT,
-    education TEXT,
-    related_links JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+#### Community Engagement Features
+Interactive community participation and content contribution:
 
--- Type-specific data for places
-CREATE TABLE place_entries (
-    celebration_entry_id UUID PRIMARY KEY REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    place_type VARCHAR(100),
-    latitude DECIMAL(10, 8),
-    longitude DECIMAL(11, 8),
-    address TEXT,
-    visiting_hours TEXT,
-    visiting_fees TEXT,
-    accessibility TEXT,
-    history TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Type-specific data for events
-CREATE TABLE event_entries (
-    celebration_entry_id UUID PRIMARY KEY REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    event_type VARCHAR(100),
-    start_date DATE,
-    end_date DATE,
-    is_recurring BOOLEAN DEFAULT FALSE,
-    recurrence_pattern VARCHAR(100),
-    organizer VARCHAR(255),
-    contact_info TEXT,
-    event_history TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Key facts about entries
-CREATE TABLE entry_facts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    celebration_entry_id UUID REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    label VARCHAR(100) NOT NULL,
-    value TEXT NOT NULL,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Media items (images, videos, documents)
-CREATE TABLE entry_media (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    celebration_entry_id UUID REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    media_type VARCHAR(20) NOT NULL CHECK (media_type IN ('image', 'video', 'audio', 'document')),
-    url TEXT NOT NULL,
-    caption TEXT,
-    alt_text TEXT,
-    sort_order INTEGER DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- User comments on entries
-CREATE TABLE entry_comments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    celebration_entry_id UUID REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    parent_comment_id UUID REFERENCES entry_comments(id),
-    content TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- User votes (likes/dislikes) on entries
-CREATE TABLE entry_votes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    celebration_entry_id UUID REFERENCES celebration_entries(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    vote_type VARCHAR(10) NOT NULL CHECK (vote_type IN ('upvote', 'downvote')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(celebration_entry_id, user_id)
-);
-
--- User submissions for new entries
-CREATE TABLE entry_submissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    entry_type VARCHAR(20) NOT NULL CHECK (entry_type IN ('person', 'place', 'event')),
-    target_entry_id UUID REFERENCES celebration_entries(id),
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL,
-    data JSONB NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-    reviewer_id UUID REFERENCES users(id),
-    reviewer_notes TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
+- **User Comments**: Threaded comment system with moderation capabilities and community discussion features
+- **Voting System**: Community voting with upvote and downvote capabilities for content quality assessment
+- **User Submissions**: Community-driven content submission system with review workflow and editorial oversight
+- **Content Moderation**: Comprehensive moderation system with approval workflows and reviewer assignment
+- **Community Recognition**: User contribution tracking and recognition for active community members
+- **Social Features**: Built-in social sharing capabilities with engagement tracking and analytics
 
 ### API Endpoints
 
 #### Public Endpoints
 
-```yaml
-# List celebration entries
-GET /api/v1/celebrate/entries:
-  parameters:
-    - page: integer
-    - limit: integer
-    - type: string (person|place|event)
-    - category: string
-    - featured: boolean
-    - search: string
-  responses:
-    200:
-      description: Paginated list of entries
-      schema:
-        type: object
-        properties:
-          data:
-            type: array
-            items:
-              $ref: '#/components/schemas/CelebrationEntry'
-          pagination:
-            $ref: '#/components/schemas/Pagination'
+#### Public API Endpoints
+Comprehensive public API for content discovery and engagement:
 
-# Get specific entry
-GET /api/v1/celebrate/entries/{entryId}:
-  parameters:
-    - entryId: string (UUID)
-  responses:
-    200:
-      description: Entry details with related content
-    404:
-      description: Entry not found
-
-# List categories
-GET /api/v1/celebrate/categories:
-  responses:
-    200:
-      description: Hierarchical list of categories
-
-# Search entries
-GET /api/v1/celebrate/search:
-  parameters:
-    - q: string (search query)
-    - type: string
-    - category: string
-    - filters: object
-  responses:
-    200:
-      description: Search results with facets
-```
+- **Entry Listing APIs**: Paginated entry listing with filtering by type, category, featured status, and search queries
+- **Entry Detail APIs**: Detailed entry information with related content, media, and community engagement data
+- **Category APIs**: Hierarchical category navigation with entry counts and metadata
+- **Search APIs**: Advanced search capabilities with full-text search, faceted filtering, and intelligent ranking
+- **Media APIs**: Media content delivery with optimized loading and accessibility features
+- **Analytics APIs**: Public analytics for entry views, engagement metrics, and trending content
+- **Export APIs**: Content export functionality for research and educational purposes
+- **Performance Optimization**: Efficient pagination, caching, and response optimization for large datasets
 
 #### Authenticated Endpoints
 
-```yaml
-# Vote on entry
-POST /api/v1/celebrate/entries/{entryId}/vote:
-  authentication: required
-  body:
-    type: object
-    properties:
-      vote_type:
-        type: string
-        enum: [upvote, downvote]
-  responses:
-    201:
-      description: Vote recorded
-    400:
-      description: Invalid vote type
+#### Authenticated API Endpoints
+Secure API endpoints for user interactions and content management:
 
-# Comment on entry
-POST /api/v1/celebrate/entries/{entryId}/comments:
-  authentication: required
-  body:
-    type: object
-    properties:
-      content:
-        type: string
-        minLength: 1
-        maxLength: 1000
-      parent_comment_id:
-        type: string
-        format: uuid
-  responses:
-    201:
-      description: Comment created
-
-# Submit new entry
-POST /api/v1/celebrate/submissions:
-  authentication: required
-  body:
-    type: object
-    properties:
-      entry_type:
-        type: string
-        enum: [person, place, event]
-      title:
-        type: string
-        minLength: 3
-        maxLength: 255
-      description:
-        type: string
-        minLength: 50
-      data:
-        type: object
-        description: Type-specific data
-  responses:
-    201:
-      description: Submission created for review
-```
+- **Voting APIs**: Community voting system with upvote and downvote capabilities for content quality assessment
+- **Comment APIs**: User comment creation and management with threading support and content moderation
+- **Submission APIs**: Community content submission system with type-specific data validation and review workflow
+- **User Profile APIs**: User profile management with contribution tracking and achievement recognition
+- **Moderation APIs**: Content moderation tools for administrators and community moderators
+- **Analytics APIs**: User-specific analytics and engagement tracking with privacy controls
+- **Notification APIs**: Real-time notification system for community interactions and content updates
+- **Authentication Integration**: Secure authentication with role-based access control and permission management
 
 ### Frontend Components
 
-#### Core Components
+#### User Interface Components
+Modern, responsive interface for cultural content exploration:
+- **Celebration Page**: Main browsing interface with advanced filtering, search, and category navigation
+- **Entry Cards**: Compact entry display with images, descriptions, and engagement metrics
+- **Detail Pages**: Comprehensive entry detail views with full descriptions, media galleries, and community features
+- **Filter System**: Advanced filtering interface with category selection, type filtering, and location-based search
+- **Grid Layout**: Responsive grid layout optimized for various screen sizes and content types
+- **Image Galleries**: Rich media presentation with image carousels and zoom capabilities
+- **Engagement Features**: Integrated voting, sharing, and commenting functionality
+- **Responsive Design**: Mobile-first design optimized for touch interactions and accessibility
 
-```typescript
-// Main celebration page component
-interface CelebrationPageProps {
-  initialEntries?: CelebrationEntry[];
-  categories: Category[];
-}
+#### Interactive Features
+Advanced user interaction and engagement components:
 
-export const CelebrationPage: React.FC<CelebrationPageProps> = ({
-  initialEntries,
-  categories
-}) => {
-  const [entries, setEntries] = useState(initialEntries || []);
-  const [filters, setFilters] = useState<CelebrationFilters>({});
-  const [loading, setLoading] = useState(false);
+- **Voting System**: Intuitive voting interface with visual feedback and real-time updates
+- **Comment System**: Threaded comment interface with reply functionality and moderation features
+- **Share Functionality**: Social media sharing with platform-specific optimization and tracking
+- **Search Interface**: Advanced search with autocomplete, suggestions, and faceted filtering
+- **Navigation Components**: Breadcrumb navigation, category trees, and content discovery features
+- **User Profiles**: User contribution tracking and achievement display
+- **Accessibility Features**: Full keyboard navigation, screen reader support, and WCAG compliance
+- **Performance Optimization**: Lazy loading, infinite scroll, and optimized image delivery
 
-  // Component implementation
-  return (
-    <div className="celebration-page">
-      <CelebrationHeader />
-      <CelebrationFilters 
-        categories={categories}
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
-      <CelebrationGrid 
-        entries={entries}
-        loading={loading}
-      />
-      <CelebrationPagination />
-    </div>
-  );
-};
-
-// Entry card component
-interface EntryCardProps {
-  entry: CelebrationEntry;
-  onClick?: (entry: CelebrationEntry) => void;
-}
-
-export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
-  return (
-    <div 
-      className="entry-card"
-      onClick={() => onClick?.(entry)}
-    >
-      <div className="entry-image">
-        <img 
-          src={entry.primary_image_url} 
-          alt={entry.title}
-          loading="lazy"
-        />
-        <div className="entry-type-badge">
-          {entry.entry_type}
-        </div>
-      </div>
-      <div className="entry-content">
-        <h3 className="entry-title">{entry.title}</h3>
-        <p className="entry-description">{entry.short_description}</p>
-        <div className="entry-stats">
-          <span className="views">{entry.view_count} views</span>
-          <span className="likes">{entry.like_count} likes</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Entry detail page component
-interface EntryDetailPageProps {
-  entryId: string;
-}
-
-export const EntryDetailPage: React.FC<EntryDetailPageProps> = ({ entryId }) => {
-  const [entry, setEntry] = useState<CelebrationEntry | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadEntryDetails();
-  }, [entryId]);
-
-  const loadEntryDetails = async () => {
-    try {
-      const response = await celebrationService.getEntry(entryId);
-      setEntry(response.data);
-      setComments(response.data.comments || []);
-    } catch (error) {
-      console.error('Failed to load entry:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) return <EntryDetailSkeleton />;
-  if (!entry) return <EntryNotFound />;
-
-  return (
-    <div className="entry-detail-page">
-      <EntryHeader entry={entry} />
-      <EntryContent entry={entry} />
-      <EntryFacts facts={entry.facts} />
-      <EntryMedia media={entry.media} />
-      <EntryActions entry={entry} />
-      <EntryComments 
-        comments={comments}
-        onCommentAdd={handleCommentAdd}
-      />
-      <RelatedEntries entries={entry.related_entries} />
-    </div>
-  );
-};
-```
-
-#### Redux State Management
-
-```typescript
-// Celebration slice
-interface CelebrationState {
-  entries: CelebrationEntry[];
-  currentEntry: CelebrationEntry | null;
-  categories: Category[];
-  filters: CelebrationFilters;
-  pagination: Pagination;
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: CelebrationState = {
-  entries: [],
-  currentEntry: null,
-  categories: [],
-  filters: {},
-  pagination: { page: 1, limit: 20, total: 0, pages: 0 },
-  loading: false,
-  error: null,
-};
-
-export const celebrationSlice = createSlice({
-  name: 'celebration',
-  initialState,
-  reducers: {
-    setLoading: (state, action) => {
-      state.loading = action.payload;
-    },
-    setEntries: (state, action) => {
-      state.entries = action.payload;
-      state.loading = false;
-    },
-    setCurrentEntry: (state, action) => {
-      state.currentEntry = action.payload;
-      state.loading = false;
-    },
-    setFilters: (state, action) => {
-      state.filters = { ...state.filters, ...action.payload };
-    },
-    updateEntryVotes: (state, action) => {
-      const { entryId, voteCount } = action.payload;
-      if (state.currentEntry?.id === entryId) {
-        state.currentEntry.like_count = voteCount;
-      }
-      const entryIndex = state.entries.findIndex(e => e.id === entryId);
-      if (entryIndex !== -1) {
-        state.entries[entryIndex].like_count = voteCount;
-      }
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchEntries.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchEntries.fulfilled, (state, action) => {
-        state.entries = action.payload.data;
-        state.pagination = action.payload.pagination;
-        state.loading = false;
-      })
-      .addCase(fetchEntries.rejected, (state, action) => {
-        state.error = action.error.message || 'Failed to fetch entries';
-        state.loading = false;
-      });
-  },
-});
-
-// Async thunks
-export const fetchEntries = createAsyncThunk(
-  'celebration/fetchEntries',
-  async (params: GetEntriesParams) => {
-    const response = await celebrationService.getEntries(params);
-    return response;
-  }
-);
-
-export const voteForEntry = createAsyncThunk(
-  'celebration/voteForEntry',
-  async ({ entryId, voteType }: { entryId: string; voteType: string }) => {
-    await celebrationService.voteForEntry(entryId, voteType);
-    const updatedEntry = await celebrationService.getEntry(entryId);
-    return { entryId, voteCount: updatedEntry.data.like_count };
-  }
-);
-```
+#### State Management and Data Flow
+Comprehensive state management for cultural content application:
+- **Application State**: Centralized state management with entries, categories, filters, and user interactions
+- **Data Synchronization**: Real-time data synchronization between components and server state
+- **Caching Strategy**: Intelligent caching for improved performance and offline capability
+- **Error Handling**: Comprehensive error handling with user-friendly error messages and recovery options
+- **Loading States**: Sophisticated loading state management with skeleton screens and progress indicators
+- **Filter Management**: Advanced filter state management with URL synchronization and persistence
+- **User Interactions**: Real-time user interaction tracking with optimistic updates and rollback capabilities
+- **Performance Optimization**: Efficient state updates with minimal re-renders and memory optimization
 
 ### Content Guidelines
 

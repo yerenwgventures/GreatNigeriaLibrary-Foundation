@@ -29,9 +29,8 @@ The Livestream System provides comprehensive live streaming capabilities within 
 
 ## Technical Architecture
 
-### Database Schema
-
-```sql
+### Live Streaming Platform Infrastructure
+Comprehensive live streaming system with advanced creator economy features:
 -- Live stream sessions
 CREATE TABLE live_streams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
