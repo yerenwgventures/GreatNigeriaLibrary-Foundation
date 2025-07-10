@@ -2,9 +2,9 @@ package service
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/repository"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/errors"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/repository"
 )
 
 // ContentAccessService defines the interface for content access service operations

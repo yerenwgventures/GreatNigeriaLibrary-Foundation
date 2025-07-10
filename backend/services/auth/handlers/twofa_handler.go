@@ -2,12 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/service"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/service"
 )
 
 // TwoFAHandler handles two-factor authentication related requests
@@ -32,7 +31,7 @@ func (h *TwoFAHandler) SetupTwoFA(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Setup 2FA
 	setupResponse, err := h.twoFAService.SetupTwoFA(userID.(uint))
 	if err != nil {
@@ -40,7 +39,7 @@ func (h *TwoFAHandler) SetupTwoFA(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to setup 2FA"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, setupResponse)
 }
 
@@ -52,14 +51,14 @@ func (h *TwoFAHandler) VerifyTwoFA(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Parse request
 	var req models.TwoFactorVerifyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-	
+
 	// Verify token
 	valid, err := h.twoFAService.VerifyTwoFA(userID.(uint), req.Token)
 	if err != nil {
@@ -67,12 +66,12 @@ func (h *TwoFAHandler) VerifyTwoFA(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify token"})
 		return
 	}
-	
+
 	if !valid {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token", "valid": false})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Token verified successfully", "valid": true})
 }
 
@@ -84,14 +83,14 @@ func (h *TwoFAHandler) EnableTwoFA(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Parse request
 	var req models.TwoFactorEnableRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-	
+
 	// Enable 2FA
 	err := h.twoFAService.EnableTwoFA(userID.(uint), req.Token)
 	if err != nil {
@@ -99,7 +98,7 @@ func (h *TwoFAHandler) EnableTwoFA(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	// Generate backup codes
 	backupCodes, err := h.twoFAService.GenerateBackupCodes(userID.(uint))
 	if err != nil {
@@ -107,9 +106,9 @@ func (h *TwoFAHandler) EnableTwoFA(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate backup codes"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Two-factor authentication enabled successfully",
+		"message":      "Two-factor authentication enabled successfully",
 		"backup_codes": backupCodes,
 	})
 }
@@ -122,14 +121,14 @@ func (h *TwoFAHandler) DisableTwoFA(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Parse request
 	var req models.TwoFactorDisableRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-	
+
 	// Disable 2FA
 	err := h.twoFAService.DisableTwoFA(userID.(uint), req.Token, req.Password)
 	if err != nil {
@@ -137,7 +136,7 @@ func (h *TwoFAHandler) DisableTwoFA(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Two-factor authentication disabled successfully"})
 }
 
@@ -149,7 +148,7 @@ func (h *TwoFAHandler) GetTwoFAStatus(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Get 2FA status
 	status, err := h.twoFAService.GetTwoFAStatus(userID.(uint))
 	if err != nil {
@@ -157,7 +156,7 @@ func (h *TwoFAHandler) GetTwoFAStatus(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get 2FA status"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -169,7 +168,7 @@ func (h *TwoFAHandler) GenerateBackupCodes(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Generate backup codes
 	backupCodes, err := h.twoFAService.GenerateBackupCodes(userID.(uint))
 	if err != nil {
@@ -177,9 +176,9 @@ func (h *TwoFAHandler) GenerateBackupCodes(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate backup codes"})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Backup codes generated successfully",
+		"message":      "Backup codes generated successfully",
 		"backup_codes": backupCodes,
 	})
 }
@@ -192,14 +191,14 @@ func (h *TwoFAHandler) ValidateBackupCode(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	
+
 	// Parse request
 	var req models.TwoFactorBackupCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
-	
+
 	// Validate backup code
 	valid, err := h.twoFAService.ValidateBackupCode(userID.(uint), req.BackupCode)
 	if err != nil {
@@ -207,11 +206,11 @@ func (h *TwoFAHandler) ValidateBackupCode(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to validate backup code"})
 		return
 	}
-	
+
 	if !valid {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid backup code", "valid": false})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Backup code validated successfully", "valid": true})
 }

@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/service"
 )
 
 // BookmarkHandler defines handlers for bookmark-related endpoints

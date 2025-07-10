@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/service"
 )
 
 // BookHandlers contains handlers for book-related operations
