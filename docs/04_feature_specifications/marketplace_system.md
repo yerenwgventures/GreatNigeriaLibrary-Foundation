@@ -33,9 +33,8 @@ The Marketplace System provides a comprehensive e-commerce platform within the G
 
 ## Technical Architecture
 
-### Database Schema
-
-```sql
+### E-Commerce Platform Architecture
+Comprehensive marketplace system with advanced vendor and customer management:
 -- Main products table
 CREATE TABLE marketplace_products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,9 +139,8 @@ Comprehensive API system for marketplace functionality:
 - **Authentication and Authorization**: Secure API access with role-based permissions and vendor ownership validation
 - **Pagination and Performance**: Optimized API responses with efficient pagination and caching strategies
 
-#### Shopping Cart
-
-```yaml
+#### Shopping Cart API
+Advanced shopping cart management with persistent storage:
 # Get cart contents
 GET /api/v1/marketplace/cart:
   authentication: required
@@ -198,9 +196,8 @@ DELETE /api/v1/marketplace/cart:
       description: Cart cleared
 ```
 
-#### Order Processing
-
-```yaml
+#### Order Processing API
+Comprehensive order management and fulfillment system:
 # Create order from cart
 POST /api/v1/marketplace/orders:
   authentication: required
@@ -266,9 +263,8 @@ PUT /api/v1/marketplace/orders/{orderId}/status:
 
 ### Frontend Components
 
-#### Product Listing and Search
-
-```typescript
+#### Product Listing and Search Interface
+Advanced product discovery and browsing experience:
 // Main marketplace page component
 interface MarketplacePageProps {
   initialProducts?: Product[];

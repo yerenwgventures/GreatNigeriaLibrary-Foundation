@@ -139,11 +139,10 @@ CREATE INDEX idx_wallet_points_activities_wallet_id ON wallet_points_activities(
 CREATE INDEX idx_wallet_security_logs_wallet_id ON wallet_security_logs(wallet_id);
 ```
 
-### API Endpoints
+### Digital Wallet API
 
-#### Wallet Management
-
-```yaml
+#### Wallet Management System
+Comprehensive digital wallet functionality with secure transaction processing:
 # Get wallet balance and details
 GET /api/v1/wallet:
   authentication: required

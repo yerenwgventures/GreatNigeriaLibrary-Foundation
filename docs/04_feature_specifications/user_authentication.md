@@ -32,9 +32,8 @@ The User Authentication system provides secure, scalable user registration, logi
 
 ## Technical Architecture
 
-### Database Schema
-
-```sql
+### Authentication System Architecture
+Comprehensive user authentication and security infrastructure:
 -- Main users table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
