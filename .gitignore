@@ -136,8 +136,9 @@ foundation-test
 
 # Development artifacts (keep foundation clean)
 import-fixes-backup-*/
-*.backup
+*.backup*
 *.bak
+*~
 
 # Any premium content that might accidentally be copied
 *premium*
@@ -158,3 +159,44 @@ docker-compose.override.yml
 # IDE and editor files
 .vscode/settings.json
 .idea/workspace.xml
+
+# Go specific
+# Compiled binaries
+/backend/cmd/*/main
+/backend/services/*/service
+vendor/
+
+# React/Node.js specific
+# Production build
+/frontend/build
+/frontend/dist
+
+# Testing
+/coverage
+*.cover
+*.coverprofile
+
+# Configuration files (keep examples)
+config.yaml
+config.yml
+/backend/config.yaml
+/backend/config.yml
+
+# Database and storage
+*.db-journal
+data/
+postgres-data/
+redis-data/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Backup directories
+backups/phase*
+backups/pre-*
+
+# Scripts and temporary fixes
+cleanup-*.sh
+fix-*.sh
+*-fixes-*.sh
