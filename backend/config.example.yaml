@@ -1,0 +1,119 @@
+# Great Nigeria Library Foundation - Configuration Example
+# Copy this file to config.yaml and update the values for your environment
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "120s"
+  environment: "development"  # development, staging, production
+
+# Database Configuration
+database:
+  host: "localhost"
+  port: 5432
+  username: "postgres"
+  password: "your_database_password"
+  database: "great_nigeria_foundation"
+  ssl_mode: "disable"  # disable, require, verify-ca, verify-full
+  max_open_conns: 25
+  max_idle_conns: 25
+  conn_max_lifetime: "5m"
+
+# Redis Configuration
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  database: 0
+
+# Authentication Configuration
+auth:
+  jwt_secret: "your-super-secret-jwt-key-change-this-in-production"
+  access_token_expiration: "15m"
+  refresh_token_expiration: "168h"  # 7 days
+  password_reset_expiration: "1h"
+  email_verification_expiration: "24h"
+  session_expiration: "720h"  # 30 days
+  max_login_attempts: 5
+  lockout_duration: "15m"
+
+# OAuth Configuration
+oauth:
+  google:
+    client_id: "your-google-client-id"
+    client_secret: "your-google-client-secret"
+    redirect_url: "http://localhost:8080/auth/google/callback"
+
+# Email Configuration
+email:
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  smtp_username: "your-email@gmail.com"
+  smtp_password: "your-app-password"
+  from_email: "noreply@greatnigeria.com"
+  from_name: "Great Nigeria Library"
+
+# Storage Configuration
+storage:
+  type: "local"  # local, s3
+  local_path: "./uploads"
+  s3:
+    region: "us-east-1"
+    bucket: "your-s3-bucket"
+    access_key: "your-s3-access-key"
+    secret_key: "your-s3-secret-key"
+
+# Logging Configuration
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+  output: "stdout"  # stdout, file
+  file: "app.log"
+
+# Service Ports (for microservices)
+services:
+  auth_service:
+    port: 8081
+  content_service:
+    port: 8082
+  discussion_service:
+    port: 8083
+  api_gateway:
+    port: 8080
+
+# Feature Flags
+features:
+  enable_registration: true
+  enable_oauth: true
+  enable_email_verification: true
+  enable_two_factor_auth: false
+  enable_file_uploads: true
+  enable_discussions: true
+  maintenance_mode: false
+
+# Rate Limiting
+rate_limiting:
+  enabled: true
+  requests_per_minute: 60
+  burst_size: 10
+
+# CORS Configuration
+cors:
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:3001"
+    - "https://greatnigeria.net"
+  allowed_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed_headers:
+    - "Content-Type"
+    - "Authorization"
+    - "X-Requested-With"
+  allow_credentials: true

@@ -26,10 +26,15 @@ func main() {
         logger := logger.NewLogger()
         logger.Info("Starting Great Nigeria Auth Service")
 
-        // Load configuration
-        cfg, err := config.LoadConfig()
+        // Load configuration (YAML with environment overrides)
+        cfg, err := config.LoadFromYAML("config.yaml")
         if err != nil {
-                logger.Fatal("Failed to load configuration: " + err.Error())
+                // Fallback to environment-only configuration
+                logger.Info("YAML config not found, using environment variables only")
+                cfg, err = config.LoadConfig()
+                if err != nil {
+                        logger.Fatal("Failed to load configuration: " + err.Error())
+                }
         }
 
         // Connect to database
