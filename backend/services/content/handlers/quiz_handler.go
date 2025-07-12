@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/models"
 )
 
 // QuizHandler handles requests for quiz-related operations

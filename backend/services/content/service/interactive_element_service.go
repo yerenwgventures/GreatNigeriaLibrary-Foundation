@@ -4,8 +4,8 @@ import (
         "encoding/json"
         "time"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/repository"
 )
 
 // InteractiveElementService defines the interface for interactive element business logic

@@ -6,7 +6,7 @@ import (
         "time"
 
         "github.com/gin-gonic/gin"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/service"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/service"
 )
 
 // ReadingAnalyticsHandler defines handlers for reading analytics endpoints

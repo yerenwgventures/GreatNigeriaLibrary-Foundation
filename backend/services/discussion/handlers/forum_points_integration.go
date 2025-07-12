@@ -6,7 +6,7 @@ import (
         "fmt"
         "net/http"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/service"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/service"
         "github.com/sirupsen/logrus"
 )
 

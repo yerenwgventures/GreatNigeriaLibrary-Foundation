@@ -5,8 +5,8 @@ import (
         "fmt"
         "log"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/repository"
 )
 
 // CitationService handles citation-related operations
