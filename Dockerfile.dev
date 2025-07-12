@@ -1,0 +1,140 @@
+# Great Nigeria Library Foundation - Development Dockerfile
+# This Dockerfile is optimized for development with hot reloading and debugging
+
+FROM golang:1.21-alpine AS base
+
+# Install development dependencies
+RUN apk add --no-cache \
+    git \
+    ca-certificates \
+    tzdata \
+    curl \
+    wget \
+    bash \
+    make \
+    && update-ca-certificates
+
+# Install Air for hot reloading
+RUN go install github.com/cosmtrek/air@latest
+
+# Create non-root user
+RUN adduser -D -g '' appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download && go mod verify
+
+# Development stage
+FROM base AS development
+
+# Copy Air configuration
+COPY .air.toml ./
+
+# Copy source code
+COPY backend/ ./backend/
+COPY main.go ./
+
+# Copy demo content
+COPY demo-content/ ./demo-content/
+
+# Create necessary directories
+RUN mkdir -p uploads logs config && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose ports
+EXPOSE 8080 6060
+
+# Set environment variables for development
+ENV GIN_MODE=debug \
+    LOG_LEVEL=debug \
+    ENVIRONMENT=development
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Default command (can be overridden)
+CMD ["air", "-c", ".air.toml"]
+
+# Testing stage
+FROM base AS testing
+
+# Install testing dependencies
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@latest && \
+    go install github.com/onsi/gomega/...@latest && \
+    go install github.com/golang/mock/mockgen@latest
+
+# Copy source code
+COPY backend/ ./backend/
+COPY main.go ./
+
+# Run tests
+RUN go test -v ./backend/...
+
+# Build stage for development
+FROM base AS build-dev
+
+# Copy source code
+COPY backend/ ./backend/
+COPY main.go ./
+
+# Build with debug information
+RUN CGO_ENABLED=0 GOOS=linux go build -gcflags="all=-N -l" -o foundation-app ./main.go
+
+# Final development image
+FROM alpine:3.18 AS final-dev
+
+# Install runtime dependencies
+RUN apk --no-cache add \
+    ca-certificates \
+    tzdata \
+    wget \
+    curl \
+    bash \
+    && update-ca-certificates
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Create directories
+RUN mkdir -p /app/uploads /app/logs /app/demo-content /app/config && \
+    chown -R appuser:appgroup /app
+
+WORKDIR /app
+
+# Copy binary
+COPY --from=build-dev --chown=appuser:appgroup /app/foundation-app ./foundation-app
+
+# Copy demo content
+COPY --chown=appuser:appgroup demo-content/ ./demo-content/
+
+# Make binary executable
+RUN chmod +x ./foundation-app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8080
+
+# Set development environment
+ENV GIN_MODE=debug \
+    LOG_LEVEL=debug \
+    ENVIRONMENT=development \
+    TZ=UTC
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Run application
+CMD ["./foundation-app"]
