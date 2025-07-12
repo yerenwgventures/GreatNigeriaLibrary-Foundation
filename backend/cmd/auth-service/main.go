@@ -64,10 +64,14 @@ func main() {
         verificationHandler := handlers.NewVerificationHandler(userService)
         profileCompletionHandler := handlers.NewProfileCompletionHandler(userService)
 
-        // Set up Gin router
-        router := gin.Default()
-        router.Use(gin.Recovery())
+        // Set up Gin router with centralized error handling
+        router := gin.New()
+
+        // Add centralized error handling middleware
+        router.Use(middleware.PanicRecovery(logger))
+        router.Use(middleware.ErrorHandler(logger))
         router.Use(middleware.RequestLogger())
+        router.Use(middleware.SecurityHeaders())
 
         // Add health check endpoint
         router.GET("/health", func(c *gin.Context) {

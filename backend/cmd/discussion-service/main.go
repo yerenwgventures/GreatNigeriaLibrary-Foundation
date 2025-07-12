@@ -57,10 +57,14 @@ func main() {
 	commentHandler := handlers.NewCommentHandler(commentService, logger)
 	likeHandler := handlers.NewLikeHandler(likeService, logger)
 
-	// Set up Gin router
-	router := gin.Default()
-	router.Use(gin.Recovery())
+	// Set up Gin router with centralized error handling
+	router := gin.New()
+
+	// Add centralized error handling middleware
+	router.Use(middleware.PanicRecovery(logger))
+	router.Use(middleware.ErrorHandler(logger))
 	router.Use(middleware.RequestLogger())
+	router.Use(middleware.SecurityHeaders())
 
 	// Public routes - can be accessed without authentication
 	router.GET("/discussions", discussionHandler.ListDiscussions)
