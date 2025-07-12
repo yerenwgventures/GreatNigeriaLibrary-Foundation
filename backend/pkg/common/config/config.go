@@ -1,33 +1,39 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
 	"golang.org/x/oauth2"
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents application configuration
 type Config struct {
-	Server   ServerConfig   `json:"server"`
-	Database DatabaseConfig `json:"database"`
-	Redis    RedisConfig    `json:"redis"`
-	Auth     AuthConfig     `json:"auth"`
-	OAuth    OAuthConfig    `json:"oauth"`
-	Email    EmailConfig    `json:"email"`
-	Storage  StorageConfig  `json:"storage"`
-	Logging  LoggingConfig  `json:"logging"`
+	Server      ServerConfig      `json:"server" yaml:"server"`
+	Database    DatabaseConfig    `json:"database" yaml:"database"`
+	Redis       RedisConfig       `json:"redis" yaml:"redis"`
+	Auth        AuthConfig        `json:"auth" yaml:"auth"`
+	OAuth       OAuthConfig       `json:"oauth" yaml:"oauth"`
+	Email       EmailConfig       `json:"email" yaml:"email"`
+	Storage     StorageConfig     `json:"storage" yaml:"storage"`
+	Logging     LoggingConfig     `json:"logging" yaml:"logging"`
+	Services    ServicesConfig    `json:"services" yaml:"services"`
+	Features    FeaturesConfig    `json:"features" yaml:"features"`
+	RateLimit   RateLimitConfig   `json:"rate_limiting" yaml:"rate_limiting"`
+	CORS        CORSConfig        `json:"cors" yaml:"cors"`
 }
 
 // ServerConfig represents server configuration
 type ServerConfig struct {
-	Host         string        `json:"host"`
-	Port         int           `json:"port"`
-	ReadTimeout  time.Duration `json:"read_timeout"`
-	WriteTimeout time.Duration `json:"write_timeout"`
-	IdleTimeout  time.Duration `json:"idle_timeout"`
-	Environment  string        `json:"environment"`
+	Host         string        `json:"host" yaml:"host"`
+	Port         int           `json:"port" yaml:"port"`
+	ReadTimeout  time.Duration `json:"read_timeout" yaml:"read_timeout"`
+	WriteTimeout time.Duration `json:"write_timeout" yaml:"write_timeout"`
+	IdleTimeout  time.Duration `json:"idle_timeout" yaml:"idle_timeout"`
+	Environment  string        `json:"environment" yaml:"environment"`
 }
 
 // DatabaseConfig represents database configuration
@@ -102,10 +108,49 @@ type S3Config struct {
 
 // LoggingConfig represents logging configuration
 type LoggingConfig struct {
-	Level  string `json:"level"`
-	Format string `json:"format"` // json, text
-	Output string `json:"output"` // stdout, file
-	File   string `json:"file"`
+	Level  string `json:"level" yaml:"level"`
+	Format string `json:"format" yaml:"format"` // json, text
+	Output string `json:"output" yaml:"output"` // stdout, file
+	File   string `json:"file" yaml:"file"`
+}
+
+// ServicesConfig represents microservices configuration
+type ServicesConfig struct {
+	AuthService       ServiceConfig `json:"auth_service" yaml:"auth_service"`
+	ContentService    ServiceConfig `json:"content_service" yaml:"content_service"`
+	DiscussionService ServiceConfig `json:"discussion_service" yaml:"discussion_service"`
+	APIGateway        ServiceConfig `json:"api_gateway" yaml:"api_gateway"`
+}
+
+// ServiceConfig represents individual service configuration
+type ServiceConfig struct {
+	Port int `json:"port" yaml:"port"`
+}
+
+// FeaturesConfig represents feature flags
+type FeaturesConfig struct {
+	EnableRegistration     bool `json:"enable_registration" yaml:"enable_registration"`
+	EnableOAuth           bool `json:"enable_oauth" yaml:"enable_oauth"`
+	EnableEmailVerification bool `json:"enable_email_verification" yaml:"enable_email_verification"`
+	EnableTwoFactorAuth   bool `json:"enable_two_factor_auth" yaml:"enable_two_factor_auth"`
+	EnableFileUploads     bool `json:"enable_file_uploads" yaml:"enable_file_uploads"`
+	EnableDiscussions     bool `json:"enable_discussions" yaml:"enable_discussions"`
+	MaintenanceMode       bool `json:"maintenance_mode" yaml:"maintenance_mode"`
+}
+
+// RateLimitConfig represents rate limiting configuration
+type RateLimitConfig struct {
+	Enabled           bool `json:"enabled" yaml:"enabled"`
+	RequestsPerMinute int  `json:"requests_per_minute" yaml:"requests_per_minute"`
+	BurstSize         int  `json:"burst_size" yaml:"burst_size"`
+}
+
+// CORSConfig represents CORS configuration
+type CORSConfig struct {
+	AllowedOrigins   []string `json:"allowed_origins" yaml:"allowed_origins"`
+	AllowedMethods   []string `json:"allowed_methods" yaml:"allowed_methods"`
+	AllowedHeaders   []string `json:"allowed_headers" yaml:"allowed_headers"`
+	AllowCredentials bool     `json:"allow_credentials" yaml:"allow_credentials"`
 }
 
 // LoadConfig loads configuration from environment variables
@@ -249,4 +294,79 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 		}
 	}
 	return defaultValue
+}
+
+// LoadFromYAML loads configuration from YAML file with environment variable overrides
+func LoadFromYAML(filename string) (*Config, error) {
+	// First try to load from YAML file
+	config := &Config{}
+
+	if _, err := os.Stat(filename); err == nil {
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read config file %s: %w", filename, err)
+		}
+
+		if err := yaml.Unmarshal(data, config); err != nil {
+			return nil, fmt.Errorf("failed to parse YAML config: %w", err)
+		}
+	}
+
+	// Override with environment variables (environment takes precedence)
+	envConfig, err := LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load environment config: %w", err)
+	}
+
+	// Merge configurations (env overrides YAML)
+	mergeConfigs(config, envConfig)
+
+	return config, nil
+}
+
+// mergeConfigs merges environment config into YAML config
+func mergeConfigs(yamlConfig, envConfig *Config) {
+	// Server config
+	if envConfig.Server.Host != "0.0.0.0" || yamlConfig.Server.Host == "" {
+		yamlConfig.Server.Host = envConfig.Server.Host
+	}
+	if envConfig.Server.Port != 8080 || yamlConfig.Server.Port == 0 {
+		yamlConfig.Server.Port = envConfig.Server.Port
+	}
+	if envConfig.Server.Environment != "development" || yamlConfig.Server.Environment == "" {
+		yamlConfig.Server.Environment = envConfig.Server.Environment
+	}
+
+	// Database config - environment variables always override YAML
+	if os.Getenv("DB_HOST") != "" {
+		yamlConfig.Database.Host = envConfig.Database.Host
+	}
+	if os.Getenv("DB_PORT") != "" {
+		yamlConfig.Database.Port = envConfig.Database.Port
+	}
+	if os.Getenv("DB_USERNAME") != "" {
+		yamlConfig.Database.Username = envConfig.Database.Username
+	}
+	if os.Getenv("DB_PASSWORD") != "" {
+		yamlConfig.Database.Password = envConfig.Database.Password
+	}
+	if os.Getenv("DB_DATABASE") != "" {
+		yamlConfig.Database.Database = envConfig.Database.Database
+	}
+
+	// Auth config - environment variables always override YAML
+	if os.Getenv("JWT_SECRET") != "" {
+		yamlConfig.Auth.JWTSecret = envConfig.Auth.JWTSecret
+	}
+
+	// Redis config - environment variables always override YAML
+	if os.Getenv("REDIS_HOST") != "" {
+		yamlConfig.Redis.Host = envConfig.Redis.Host
+	}
+	if os.Getenv("REDIS_PORT") != "" {
+		yamlConfig.Redis.Port = envConfig.Redis.Port
+	}
+	if os.Getenv("REDIS_PASSWORD") != "" {
+		yamlConfig.Redis.Password = envConfig.Redis.Password
+	}
 }
