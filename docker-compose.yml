@@ -14,7 +14,6 @@ services:
       - "${DB_EXTERNAL_PORT:-5433}:5432"
     volumes:
       - foundation_db_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./database/backups:/backups
     networks:
       - foundation-network

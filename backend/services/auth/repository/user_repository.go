@@ -17,11 +17,6 @@ type UserRepository struct {
 
 // NewUserRepository creates a new user repository
 func NewUserRepository(db *gorm.DB, logger *logrus.Logger) *UserRepository {
-        // Create the user table if it doesn't exist
-        if err := db.AutoMigrate(&models.User{}, &models.PasswordResetToken{}, &models.EmailVerificationToken{}); err != nil {
-            logger.WithError(err).Error("Failed to migrate models")
-        }
-        
         return &UserRepository{
                 db:     db,
                 logger: logger,

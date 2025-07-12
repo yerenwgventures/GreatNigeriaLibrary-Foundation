@@ -54,15 +54,10 @@ func main() {
 	}
 	defer dbConn.Close()
 
-	// Run migrations for foundation models only
-	if err := dbConn.Migrate(
-		&models.User{},
-		&models.Session{},
-		&models.PasswordResetToken{},
-		&models.EmailVerificationToken{},
-		// Add other foundation models here
-	); err != nil {
-		appLogger.Fatal("Failed to run migrations: " + err.Error())
+	// Run comprehensive GORM auto-migration for all foundation services
+	migrationService := database.NewMigrationService(dbConn.DB, appLogger)
+	if err := migrationService.MigrateFoundation(); err != nil {
+		appLogger.Fatal("Failed to run foundation migrations: " + err.Error())
 	}
 
 	// Initialize repositories

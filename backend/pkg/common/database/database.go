@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
 )
 
 // Config represents database configuration
@@ -213,6 +214,28 @@ func DefaultConfig() *Config {
 	}
 }
 
+// NewDatabase creates a new database connection from config
+func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
+	dbConfig := &Config{
+		Host:            cfg.Database.Host,
+		Port:            cfg.Database.Port,
+		Username:        cfg.Database.Username,
+		Password:        cfg.Database.Password,
+		Database:        cfg.Database.Database,
+		SSLMode:         cfg.Database.SSLMode,
+		MaxOpenConns:    cfg.Database.MaxOpenConns,
+		MaxIdleConns:    cfg.Database.MaxIdleConns,
+		ConnMaxLifetime: cfg.Database.ConnMaxLifetime,
+	}
+
+	conn, err := NewConnection(dbConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn.DB, nil
+}
+
 // TestConnection tests database connectivity
 func TestConnection(config *Config) error {
 	conn, err := NewConnection(config)
@@ -220,6 +243,6 @@ func TestConnection(config *Config) error {
 		return err
 	}
 	defer conn.Close()
-	
+
 	return conn.Health()
 }

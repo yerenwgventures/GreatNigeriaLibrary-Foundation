@@ -42,6 +42,12 @@ func main() {
 		logger.Fatal("Failed to connect to database: " + err.Error())
 	}
 
+	// Run GORM auto-migration for content service
+	migrationService := database.NewMigrationService(db, logger)
+	if err := migrationService.MigrateContentService(); err != nil {
+		logger.Fatal("Failed to run content service migrations: " + err.Error())
+	}
+
 	// Initialize repositories
 	bookRepo := repository.NewBookRepository(db)
 	progressRepo := repository.NewProgressRepository(db)
