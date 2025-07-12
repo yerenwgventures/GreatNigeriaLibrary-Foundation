@@ -13,10 +13,12 @@ import (
 	authService "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/service"
 
 	// Shared packages
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/auth"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/database"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/middleware"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/redis"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 )
 
@@ -68,6 +70,10 @@ func main() {
 	userSvc := authService.NewUserService(userRepo, appLogger)
 	// Add other foundation services
 
+	// Initialize enhanced JWT manager and authorization manager
+	jwtManager := userSvc.GetJWTManager()
+	authManager := auth.NewAuthorizationManager()
+
 	// Initialize handlers
 	userHandler := authHandlers.NewUserHandler(userSvc, appLogger)
 	// Add other foundation handlers
@@ -89,7 +95,7 @@ func main() {
 	api := router.Group("/api/v1")
 
 	// Foundation routes only
-	setupFoundationRoutes(api, userHandler)
+	setupFoundationRoutes(api, userHandler, jwtManager, authManager, appLogger)
 
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -112,37 +118,96 @@ func main() {
 	}
 }
 
-func setupFoundationRoutes(api *gin.RouterGroup, userHandler *authHandlers.UserHandler) {
-	// Auth routes
-	auth := api.Group("/auth")
+func setupFoundationRoutes(api *gin.RouterGroup, userHandler *authHandlers.UserHandler, jwtManager *auth.JWTManager, authManager *auth.AuthorizationManager, logger *logger.Logger) {
+	// Public auth routes - no authentication required
+	authPublic := api.Group("/auth")
 	{
-		auth.POST("/register", userHandler.Register)
-		auth.POST("/login", userHandler.Login)
-		auth.POST("/logout", userHandler.Logout)
-		auth.GET("/profile", userHandler.GetProfile)
-		auth.PUT("/profile", userHandler.UpdateProfile)
+		authPublic.POST("/register", userHandler.Register)
+		authPublic.POST("/login", userHandler.Login)
 	}
 
-	// Content routes (demo content only)
-	content := api.Group("/content")
+	// Protected auth routes - require authentication
+	authProtected := api.Group("/auth")
+	authProtected.Use(middleware.AuthRequired(jwtManager, logger))
 	{
-		content.GET("/books", func(c *gin.Context) {
+		authProtected.POST("/logout", userHandler.Logout)
+		authProtected.GET("/profile", userHandler.GetProfile)
+		authProtected.PUT("/profile",
+			middleware.PermissionRequired(authManager, auth.PermissionUpdateProfile, logger),
+			userHandler.UpdateProfile)
+	}
+
+	// Public content routes - no authentication required
+	contentPublic := api.Group("/content/public")
+	{
+		contentPublic.GET("/books", func(c *gin.Context) {
 			c.JSON(200, gin.H{
-				"message": "Demo books endpoint - Foundation version",
+				"message": "Demo books endpoint - Foundation version (Public)",
 				"books": []gin.H{
 					{
 						"id":    1,
 						"title": "Platform User Guide",
 						"type":  "demo",
+						"access": "public",
+					},
+				},
+			})
+		})
+	}
+
+	// Protected content routes - require authentication and content permissions
+	contentProtected := api.Group("/content")
+	contentProtected.Use(middleware.AuthRequired(jwtManager, logger))
+	contentProtected.Use(middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger))
+	{
+		contentProtected.GET("/books", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "Demo books endpoint - Foundation version (Protected)",
+				"books": []gin.H{
+					{
+						"id":    1,
+						"title": "Platform User Guide",
+						"type":  "demo",
+						"access": "protected",
 					},
 					{
 						"id":    2,
 						"title": "Nigerian History Overview",
 						"type":  "educational",
+						"access": "protected",
+					},
+					{
+						"id":    3,
+						"title": "Advanced Research Methods",
+						"type":  "premium",
+						"access": "protected",
 					},
 				},
 			})
 		})
+	}
+
+	// Admin content routes - require admin permissions
+	contentAdmin := api.Group("/content/admin")
+	contentAdmin.Use(middleware.AuthRequired(jwtManager, logger))
+	contentAdmin.Use(middleware.RoleRequired(int(auth.RoleAdmin), logger))
+	{
+		contentAdmin.GET("/stats", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "Content statistics - Admin only",
+				"stats": gin.H{
+					"total_books": 3,
+					"public_books": 1,
+					"protected_books": 2,
+					"total_views": 1250,
+				},
+			})
+		})
+		contentAdmin.POST("/books",
+			middleware.PermissionRequired(authManager, auth.PermissionCreateContent, logger),
+			func(c *gin.Context) {
+				c.JSON(501, gin.H{"message": "Content creation not yet implemented"})
+			})
 	}
 
 	// Discussion routes

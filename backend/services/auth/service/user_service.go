@@ -1339,3 +1339,8 @@ func (s *UserService) generateDeviceID(userAgent, ipAddress string) string {
 	deviceInfo := fmt.Sprintf("%s:%s", userAgent, ipAddress)
 	return fmt.Sprintf("device_%x", len(deviceInfo)*31+int(deviceInfo[0]))
 }
+
+// GetJWTManager returns the JWT manager for use in middleware
+func (s *UserService) GetJWTManager() *auth.JWTManager {
+	return s.jwtManager
+}
