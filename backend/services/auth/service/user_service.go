@@ -11,6 +11,7 @@ import (
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/errors"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/redis"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -62,7 +63,7 @@ type UserRepository interface {
 	GetUsersByRole(role int, page, pageSize int) ([]models.User, int64, error)
 }
 
-// NewUserService creates a new user service
+// NewUserService creates a new user service with enhanced JWT support
 func NewUserService(userRepo UserRepository, logger *logger.Logger) *UserService {
 	// Load configuration for JWT manager
 	cfg, err := config.LoadConfig()
@@ -70,11 +71,49 @@ func NewUserService(userRepo UserRepository, logger *logger.Logger) *UserService
 		logger.Fatal("Failed to load config for User Service: " + err.Error())
 	}
 
-	jwtManager := auth.NewJWTManager(
-		cfg.Auth.JWTSecret,
-		cfg.Auth.AccessTokenExpiration,
-		cfg.Auth.RefreshTokenExpiration,
-	)
+	// Initialize Redis client if enabled
+	var redisClient *redis.Client
+	if cfg.Redis.Enabled {
+		redisConfig := &redis.Config{
+			Host:         cfg.Redis.Host,
+			Port:         cfg.Redis.Port,
+			Password:     cfg.Redis.Password,
+			Database:     cfg.Redis.Database,
+			PoolSize:     cfg.Redis.PoolSize,
+			MinIdleConns: cfg.Redis.MinIdleConns,
+			MaxRetries:   cfg.Redis.MaxRetries,
+			DialTimeout:  cfg.Redis.DialTimeout,
+			ReadTimeout:  cfg.Redis.ReadTimeout,
+			WriteTimeout: cfg.Redis.WriteTimeout,
+		}
+
+		redisClientWrapper, err := redis.NewClient(redisConfig)
+		if err != nil {
+			logger.WithError(err).Warn("Failed to connect to Redis, JWT features will be limited")
+		} else {
+			redisClient = redisClientWrapper.Client
+			logger.Info("Redis connected successfully for JWT token management")
+		}
+	}
+
+	// Create enhanced JWT manager
+	var jwtManager *auth.JWTManager
+	if redisClient != nil {
+		jwtManager = auth.NewJWTManager(
+			cfg.Auth.JWTSecret,
+			cfg.Auth.AccessTokenExpiration,
+			cfg.Auth.RefreshTokenExpiration,
+			redisClient,
+			cfg.Auth.JWTIssuer,
+		)
+	} else {
+		jwtManager = auth.NewJWTManagerWithoutRedis(
+			cfg.Auth.JWTSecret,
+			cfg.Auth.AccessTokenExpiration,
+			cfg.Auth.RefreshTokenExpiration,
+			cfg.Auth.JWTIssuer,
+		)
+	}
 
 	// Create OAuth manager
 	oauthManager := auth.NewOAuthManager(logger, cfg)
@@ -307,8 +346,20 @@ func (s *UserService) loginWithSession(user *models.User, req *models.UserLoginR
 		return nil, nil, errors.ErrInternalServer("Failed to create session")
 	}
 
-	// Generate tokens with session information
-	tokens, err := s.jwtManager.GenerateTokenPairWithSession(user, session.ID, deviceType)
+	// Generate enhanced tokens with session information and metadata
+	permissions := s.getUserPermissions(user.Role)
+	deviceID := s.generateDeviceID(req.DeviceInfo, req.IP)
+
+	tokens, err := s.jwtManager.GenerateTokensWithMetadata(
+		user.ID,
+		user.Username,
+		user.Email,
+		user.Role,
+		permissions,
+		session.ID,
+		deviceID,
+		req.IP,
+	)
 	if err != nil {
 		s.logger.WithError(err).WithField("user_id", user.ID).Error("Failed to generate tokens with session")
 		return nil, nil, errors.ErrInternalServer("Failed to generate authentication tokens")
@@ -1257,4 +1308,34 @@ func (s *UserService) LogoutAllSessions(userID uint) error {
 
 	s.logger.WithField("user_id", userID).Info("All user sessions terminated successfully")
 	return nil
+}
+
+// Helper methods for enhanced JWT authentication
+
+// getUserPermissions returns permissions based on user role
+func (s *UserService) getUserPermissions(role int) []string {
+	authManager := auth.NewAuthorizationManager()
+	userRole, err := auth.RoleFromInt(role)
+	if err != nil {
+		return []string{} // Return empty permissions for invalid roles
+	}
+
+	permissions := authManager.GetRolePermissions(userRole)
+	permissionStrings := make([]string, len(permissions))
+	for i, perm := range permissions {
+		permissionStrings[i] = string(perm)
+	}
+
+	return permissionStrings
+}
+
+// generateDeviceID generates a device ID based on user agent and IP
+func (s *UserService) generateDeviceID(userAgent, ipAddress string) string {
+	if userAgent == "" && ipAddress == "" {
+		return ""
+	}
+
+	// Simple device ID generation - in production, use a more sophisticated method
+	deviceInfo := fmt.Sprintf("%s:%s", userAgent, ipAddress)
+	return fmt.Sprintf("device_%x", len(deviceInfo)*31+int(deviceInfo[0]))
 }

@@ -144,19 +144,11 @@ func (r *GormContentAccessRepository) GetUserPrivacySettings(userID uint) (*mode
 		if err == gorm.ErrRecordNotFound {
 			// If not found, create default settings
 			settings = models.UserPrivacySettings{
-				UserID:              userID,
-				ProfileVisibility:   1, // Public by default
-				ShowEmail:           false,
-				ShowFullName:        true,
-				ShowReadingProgress: true,
-				ShowPointsBalance:   true,
-				ShowBookmarks:       false,
-				ShowDiscussions:     true,
-				ShowComments:        true,
-				ShowJoinDate:        true,
-				AllowFollowers:      true,
-				AllowDirectMessages: true,
-				AllowTagging:        true,
+				UserID:                userID,
+				ProfileVisibility:     "public",
+				ActivityVisibility:    "friends",
+				ContactInfoVisibility: "private",
+				SearchVisibility:      true,
 			}
 			err = r.db.Create(&settings).Error
 			if err != nil {

@@ -49,24 +49,37 @@ type DatabaseConfig struct {
 	ConnMaxLifetime time.Duration `json:"conn_max_lifetime"`
 }
 
-// RedisConfig represents Redis configuration
+// RedisConfig represents enhanced Redis configuration
 type RedisConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Password string `json:"password"`
-	Database int    `json:"database"`
+	Host         string        `json:"host" yaml:"host"`
+	Port         int           `json:"port" yaml:"port"`
+	Password     string        `json:"password" yaml:"password"`
+	Database     int           `json:"database" yaml:"database"`
+	PoolSize     int           `json:"pool_size" yaml:"pool_size"`
+	MinIdleConns int           `json:"min_idle_conns" yaml:"min_idle_conns"`
+	MaxRetries   int           `json:"max_retries" yaml:"max_retries"`
+	DialTimeout  time.Duration `json:"dial_timeout" yaml:"dial_timeout"`
+	ReadTimeout  time.Duration `json:"read_timeout" yaml:"read_timeout"`
+	WriteTimeout time.Duration `json:"write_timeout" yaml:"write_timeout"`
+	Enabled      bool          `json:"enabled" yaml:"enabled"`
 }
 
-// AuthConfig represents authentication configuration
+// AuthConfig represents enhanced authentication configuration
 type AuthConfig struct {
-	JWTSecret              string        `json:"jwt_secret"`
-	AccessTokenExpiration  time.Duration `json:"access_token_expiration"`
-	RefreshTokenExpiration time.Duration `json:"refresh_token_expiration"`
-	PasswordResetExpiration time.Duration `json:"password_reset_expiration"`
-	EmailVerificationExpiration time.Duration `json:"email_verification_expiration"`
-	SessionExpiration      time.Duration `json:"session_expiration"`
-	MaxLoginAttempts       int           `json:"max_login_attempts"`
-	LockoutDuration        time.Duration `json:"lockout_duration"`
+	JWTSecret                   string        `json:"jwt_secret" yaml:"jwt_secret"`
+	JWTIssuer                   string        `json:"jwt_issuer" yaml:"jwt_issuer"`
+	AccessTokenExpiration       time.Duration `json:"access_token_expiration" yaml:"access_token_expiration"`
+	RefreshTokenExpiration      time.Duration `json:"refresh_token_expiration" yaml:"refresh_token_expiration"`
+	PasswordResetExpiration     time.Duration `json:"password_reset_expiration" yaml:"password_reset_expiration"`
+	EmailVerificationExpiration time.Duration `json:"email_verification_expiration" yaml:"email_verification_expiration"`
+	SessionExpiration           time.Duration `json:"session_expiration" yaml:"session_expiration"`
+	MaxLoginAttempts            int           `json:"max_login_attempts" yaml:"max_login_attempts"`
+	LockoutDuration             time.Duration `json:"lockout_duration" yaml:"lockout_duration"`
+	EnableTokenRevocation       bool          `json:"enable_token_revocation" yaml:"enable_token_revocation"`
+	EnableSessionTracking       bool          `json:"enable_session_tracking" yaml:"enable_session_tracking"`
+	RequireEmailVerification    bool          `json:"require_email_verification" yaml:"require_email_verification"`
+	Enable2FA                   bool          `json:"enable_2fa" yaml:"enable_2fa"`
+	TokenSecurityChecks         bool          `json:"token_security_checks" yaml:"token_security_checks"`
 }
 
 // OAuthConfig represents OAuth configuration
@@ -176,20 +189,33 @@ func LoadConfig() (*Config, error) {
 			ConnMaxLifetime: getEnvAsDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		Redis: RedisConfig{
-			Host:     getEnv("REDIS_HOST", "localhost"),
-			Port:     getEnvAsInt("REDIS_PORT", 6379),
-			Password: getEnv("REDIS_PASSWORD", ""),
-			Database: getEnvAsInt("REDIS_DATABASE", 0),
+			Host:         getEnv("REDIS_HOST", "localhost"),
+			Port:         getEnvAsInt("REDIS_PORT", 6379),
+			Password:     getEnv("REDIS_PASSWORD", ""),
+			Database:     getEnvAsInt("REDIS_DATABASE", 0),
+			PoolSize:     getEnvAsInt("REDIS_POOL_SIZE", 10),
+			MinIdleConns: getEnvAsInt("REDIS_MIN_IDLE_CONNS", 5),
+			MaxRetries:   getEnvAsInt("REDIS_MAX_RETRIES", 3),
+			DialTimeout:  getEnvAsDuration("REDIS_DIAL_TIMEOUT", 5*time.Second),
+			ReadTimeout:  getEnvAsDuration("REDIS_READ_TIMEOUT", 3*time.Second),
+			WriteTimeout: getEnvAsDuration("REDIS_WRITE_TIMEOUT", 3*time.Second),
+			Enabled:      getEnvAsBool("REDIS_ENABLED", true),
 		},
 		Auth: AuthConfig{
-			JWTSecret:              getEnv("JWT_SECRET", "your-secret-key"),
-			AccessTokenExpiration:  getEnvAsDuration("ACCESS_TOKEN_EXPIRATION", 15*time.Minute),
-			RefreshTokenExpiration: getEnvAsDuration("REFRESH_TOKEN_EXPIRATION", 7*24*time.Hour),
-			PasswordResetExpiration: getEnvAsDuration("PASSWORD_RESET_EXPIRATION", 1*time.Hour),
+			JWTSecret:                   getEnv("JWT_SECRET", "your-secret-key"),
+			JWTIssuer:                   getEnv("JWT_ISSUER", "great-nigeria-library"),
+			AccessTokenExpiration:       getEnvAsDuration("ACCESS_TOKEN_EXPIRATION", 15*time.Minute),
+			RefreshTokenExpiration:      getEnvAsDuration("REFRESH_TOKEN_EXPIRATION", 7*24*time.Hour),
+			PasswordResetExpiration:     getEnvAsDuration("PASSWORD_RESET_EXPIRATION", 1*time.Hour),
 			EmailVerificationExpiration: getEnvAsDuration("EMAIL_VERIFICATION_EXPIRATION", 24*time.Hour),
-			SessionExpiration:      getEnvAsDuration("SESSION_EXPIRATION", 30*24*time.Hour),
-			MaxLoginAttempts:       getEnvAsInt("MAX_LOGIN_ATTEMPTS", 5),
-			LockoutDuration:        getEnvAsDuration("LOCKOUT_DURATION", 15*time.Minute),
+			SessionExpiration:           getEnvAsDuration("SESSION_EXPIRATION", 30*24*time.Hour),
+			MaxLoginAttempts:            getEnvAsInt("MAX_LOGIN_ATTEMPTS", 5),
+			LockoutDuration:             getEnvAsDuration("LOCKOUT_DURATION", 15*time.Minute),
+			EnableTokenRevocation:       getEnvAsBool("ENABLE_TOKEN_REVOCATION", true),
+			EnableSessionTracking:       getEnvAsBool("ENABLE_SESSION_TRACKING", true),
+			RequireEmailVerification:    getEnvAsBool("REQUIRE_EMAIL_VERIFICATION", false),
+			Enable2FA:                   getEnvAsBool("ENABLE_2FA", false),
+			TokenSecurityChecks:         getEnvAsBool("TOKEN_SECURITY_CHECKS", true),
 		},
 		OAuth: OAuthConfig{
 			Google: GoogleOAuthConfig{
@@ -291,6 +317,15 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 	if value := os.Getenv(key); value != "" {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
+		}
+	}
+	return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
 		}
 	}
 	return defaultValue
