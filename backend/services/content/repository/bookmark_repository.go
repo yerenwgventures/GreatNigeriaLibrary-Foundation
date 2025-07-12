@@ -3,7 +3,7 @@ package repository
 import (
         "errors"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/models"
         "gorm.io/gorm"
 )
 

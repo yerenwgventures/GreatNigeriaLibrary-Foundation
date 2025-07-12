@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/service"
 )
 
 // FlagHandler defines the handler for content flag endpoints

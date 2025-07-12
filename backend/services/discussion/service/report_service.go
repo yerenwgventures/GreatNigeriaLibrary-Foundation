@@ -5,8 +5,8 @@ import (
         "fmt"
         "time"
 
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/repository"
 )
 
 // ReportService defines the interface for content report operations

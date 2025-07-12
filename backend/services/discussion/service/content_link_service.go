@@ -7,9 +7,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
-	discussionrepo "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/repository"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/repository"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/models"
+	discussionrepo "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/repository"
 )
 
 // ContentLinkService defines the interface for content link operations

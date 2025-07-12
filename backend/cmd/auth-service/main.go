@@ -5,9 +5,9 @@ import (
         "os"
 
         "github.com/gin-gonic/gin"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/handlers"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/repository"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth/service"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/handlers"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/service"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/database"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"

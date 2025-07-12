@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/auth"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/repository"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/content/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/repository"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/service"
 )
 
 // FeedbackHandler defines the interface for feedback route handling

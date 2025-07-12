@@ -5,8 +5,8 @@ import (
         "time"
 
         "github.com/gosimple/slug"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/models"
-        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/discussion/repository"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/models"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/discussion/repository"
         "gorm.io/gorm"
 )
 

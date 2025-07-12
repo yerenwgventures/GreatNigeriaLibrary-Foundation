@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/groups/models"
-	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/internal/groups/repository"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/groups/models"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/groups/repository"
 )
 
 // GroupService defines the interface for group-related business logic
