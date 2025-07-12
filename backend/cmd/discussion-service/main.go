@@ -42,6 +42,12 @@ func main() {
 		logger.Fatal("Failed to connect to database: " + err.Error())
 	}
 
+	// Run GORM auto-migration for discussion service
+	migrationService := database.NewMigrationService(db, logger)
+	if err := migrationService.MigrateDiscussionService(); err != nil {
+		logger.Fatal("Failed to run discussion service migrations: " + err.Error())
+	}
+
 	// Initialize repositories
 	discussionRepo := repository.NewDiscussionRepository(db)
 	commentRepo := repository.NewCommentRepository(db)

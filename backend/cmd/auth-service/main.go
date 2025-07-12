@@ -43,6 +43,12 @@ func main() {
                 logger.Fatal("Failed to connect to database: " + err.Error())
         }
 
+        // Run GORM auto-migration for auth service
+        migrationService := database.NewMigrationService(db, logger)
+        if err := migrationService.MigrateAuthService(); err != nil {
+                logger.Fatal("Failed to run auth service migrations: " + err.Error())
+        }
+
         // Initialize repositories
         userRepo := repository.NewUserRepository(db, logger.Logger)
         twoFARepo := repository.NewTwoFARepository(db, logger.Logger)
