@@ -23,16 +23,35 @@ type Logger interface {
 type JWTManager interface {
 	ValidateToken(tokenString string) (*Claims, error)
 	ExtractUserID(tokenString string) (uint, error)
+	IsTokenRevoked(tokenString string) bool
 }
 
-// Claims represents JWT claims
-type Claims struct {
-	UserID    uint   `json:"user_id"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	Role      int    `json:"role"`
-	SessionID string `json:"session_id,omitempty"`
+// AuthorizationManager interface for middleware
+type AuthorizationManager interface {
+	HasPermission(role Role, permission Permission) bool
+	HasAnyPermission(role Role, permissions []Permission) bool
+	CanAccessResource(userRole Role, userID uint, resource string, action string, resourceOwnerID uint) bool
 }
+
+// Claims represents enhanced JWT claims
+type Claims struct {
+	UserID       uint     `json:"user_id"`
+	Username     string   `json:"username"`
+	Email        string   `json:"email"`
+	Role         int      `json:"role"`
+	Permissions  []string `json:"permissions,omitempty"`
+	SessionID    string   `json:"session_id,omitempty"`
+	TokenType    string   `json:"token_type"`
+	DeviceID     string   `json:"device_id,omitempty"`
+	IPAddress    string   `json:"ip_address,omitempty"`
+	TokenVersion int      `json:"token_version"`
+}
+
+// Role represents user roles
+type Role int
+
+// Permission represents a specific permission
+type Permission string
 
 // CORS middleware
 func CORS() gin.HandlerFunc {
@@ -230,7 +249,7 @@ func RateLimit() gin.HandlerFunc {
 	})
 }
 
-// AuthRequired middleware validates JWT tokens
+// AuthRequired middleware validates JWT tokens with enhanced security
 func AuthRequired(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -251,29 +270,74 @@ func AuthRequired(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 		}
 
 		token := tokenParts[1]
+
+		// Enhanced token validation
 		claims, err := jwtManager.ValidateToken(token)
 		if err != nil {
-			logger.WithField("error", err.Error()).Error("Token validation failed")
+			logger.WithFields(map[string]interface{}{
+				"error": err.Error(),
+				"path":  c.Request.URL.Path,
+				"ip":    c.ClientIP(),
+			}).Error("Token validation failed")
 			c.Error(errors.ErrTokenInvalid)
 			c.Abort()
 			return
 		}
 
-		// Set user information in context
+		// Additional security checks
+		if err := validateTokenSecurity(claims, c, logger); err != nil {
+			logger.WithFields(map[string]interface{}{
+				"error":   err.Error(),
+				"user_id": claims.UserID,
+				"path":    c.Request.URL.Path,
+				"ip":      c.ClientIP(),
+			}).Error("Token security validation failed")
+			c.Error(errors.ErrTokenInvalid)
+			c.Abort()
+			return
+		}
+
+		// Set enhanced user information in context
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("email", claims.Email)
 		c.Set("role", claims.Role)
+		c.Set("permissions", claims.Permissions)
 		c.Set("session_id", claims.SessionID)
+		c.Set("device_id", claims.DeviceID)
+		c.Set("token_version", claims.TokenVersion)
+		c.Set("token", token) // Store token for potential revocation
 
 		logger.WithFields(map[string]interface{}{
 			"user_id":  claims.UserID,
 			"username": claims.Username,
+			"role":     claims.Role,
 			"path":     c.Request.URL.Path,
-		}).Info("User authenticated")
+			"ip":       c.ClientIP(),
+		}).Info("User authenticated successfully")
 
 		c.Next()
 	})
+}
+
+// validateTokenSecurity performs additional security validations
+func validateTokenSecurity(claims *Claims, c *gin.Context, logger Logger) error {
+	// Validate token type (should be access token for API requests)
+	if claims.TokenType != "access" && claims.TokenType != "" {
+		return fmt.Errorf("invalid token type: %s", claims.TokenType)
+	}
+
+	// Optional: Validate IP address if stored in token
+	if claims.IPAddress != "" && claims.IPAddress != c.ClientIP() {
+		logger.WithFields(map[string]interface{}{
+			"token_ip":   claims.IPAddress,
+			"request_ip": c.ClientIP(),
+			"user_id":    claims.UserID,
+		}).Info("IP address mismatch detected")
+		// Note: In production, you might want to be more strict about this
+	}
+
+	return nil
 }
 
 // OptionalAuth middleware validates JWT tokens but doesn't require them
@@ -309,12 +373,12 @@ func OptionalAuth(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 	})
 }
 
-// RoleRequired middleware checks if user has required role
+// RoleRequired middleware checks if user has required role (enhanced)
 func RoleRequired(requiredRole int, logger Logger) gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		userRole, exists := c.Get("role")
 		if !exists {
-			logger.Error("Role check failed: no role in context")
+			logger.WithField("path", c.Request.URL.Path).Error("Role check failed: no role in context")
 			c.Error(errors.ErrUnauthorized)
 			c.Abort()
 			return
@@ -322,11 +386,161 @@ func RoleRequired(requiredRole int, logger Logger) gin.HandlerFunc {
 
 		role, ok := userRole.(int)
 		if !ok || role < requiredRole {
+			userID, _ := c.Get("user_id")
 			logger.WithFields(map[string]interface{}{
+				"user_id":       userID,
 				"user_role":     role,
 				"required_role": requiredRole,
 				"path":          c.Request.URL.Path,
+				"ip":            c.ClientIP(),
+			}).Error("Insufficient role permissions")
+
+			c.Error(errors.ErrForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	})
+}
+
+// PermissionRequired middleware checks if user has specific permission
+func PermissionRequired(authManager AuthorizationManager, requiredPermission Permission, logger Logger) gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		userRole, exists := c.Get("role")
+		if !exists {
+			logger.WithField("path", c.Request.URL.Path).Error("Permission check failed: no role in context")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		roleInt, ok := userRole.(int)
+		if !ok {
+			logger.WithField("path", c.Request.URL.Path).Error("Permission check failed: invalid role type")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		role := Role(roleInt)
+		if !authManager.HasPermission(role, requiredPermission) {
+			userID, _ := c.Get("user_id")
+			logger.WithFields(map[string]interface{}{
+				"user_id":            userID,
+				"user_role":          role,
+				"required_permission": requiredPermission,
+				"path":               c.Request.URL.Path,
+				"ip":                 c.ClientIP(),
 			}).Error("Insufficient permissions")
+
+			c.Error(errors.ErrForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	})
+}
+
+// AnyPermissionRequired middleware checks if user has any of the specified permissions
+func AnyPermissionRequired(authManager AuthorizationManager, requiredPermissions []Permission, logger Logger) gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		userRole, exists := c.Get("role")
+		if !exists {
+			logger.WithField("path", c.Request.URL.Path).Error("Permission check failed: no role in context")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		roleInt, ok := userRole.(int)
+		if !ok {
+			logger.WithField("path", c.Request.URL.Path).Error("Permission check failed: invalid role type")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		role := Role(roleInt)
+		if !authManager.HasAnyPermission(role, requiredPermissions) {
+			userID, _ := c.Get("user_id")
+			logger.WithFields(map[string]interface{}{
+				"user_id":             userID,
+				"user_role":           role,
+				"required_permissions": requiredPermissions,
+				"path":                c.Request.URL.Path,
+				"ip":                  c.ClientIP(),
+			}).Error("Insufficient permissions")
+
+			c.Error(errors.ErrForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	})
+}
+
+// ResourceOwnerOrPermission middleware checks if user owns resource or has permission
+func ResourceOwnerOrPermission(authManager AuthorizationManager, permission Permission, resourceOwnerIDKey string, logger Logger) gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		userID, exists := c.Get("user_id")
+		if !exists {
+			logger.WithField("path", c.Request.URL.Path).Error("Resource access check failed: no user ID in context")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		userIDUint, ok := userID.(uint)
+		if !ok {
+			logger.WithField("path", c.Request.URL.Path).Error("Resource access check failed: invalid user ID type")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		// Get resource owner ID from context or URL parameter
+		var resourceOwnerID uint
+		if ownerID, exists := c.Get(resourceOwnerIDKey); exists {
+			if ownerIDUint, ok := ownerID.(uint); ok {
+				resourceOwnerID = ownerIDUint
+			}
+		}
+
+		// Check if user owns the resource
+		if userIDUint == resourceOwnerID {
+			c.Next()
+			return
+		}
+
+		// Check if user has the required permission
+		userRole, exists := c.Get("role")
+		if !exists {
+			logger.WithField("path", c.Request.URL.Path).Error("Resource access check failed: no role in context")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		roleInt, ok := userRole.(int)
+		if !ok {
+			logger.WithField("path", c.Request.URL.Path).Error("Resource access check failed: invalid role type")
+			c.Error(errors.ErrUnauthorized)
+			c.Abort()
+			return
+		}
+
+		role := Role(roleInt)
+		if !authManager.HasPermission(role, permission) {
+			logger.WithFields(map[string]interface{}{
+				"user_id":          userIDUint,
+				"resource_owner":   resourceOwnerID,
+				"required_permission": permission,
+				"path":             c.Request.URL.Path,
+				"ip":               c.ClientIP(),
+			}).Error("Insufficient permissions for resource access")
 
 			c.Error(errors.ErrForbidden)
 			c.Abort()
