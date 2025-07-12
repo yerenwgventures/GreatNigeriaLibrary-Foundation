@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/errors"
 )
 
 // Logger interface for middleware
@@ -85,21 +88,135 @@ func RequestLogger(logger Logger) gin.HandlerFunc {
 	})
 }
 
-// Recovery middleware recovers from panics
+// Recovery middleware recovers from panics with enhanced error handling
 func Recovery(logger Logger) gin.HandlerFunc {
 	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+		// Log the panic with full context
 		logger.WithFields(map[string]interface{}{
 			"error":      recovered,
 			"method":     c.Request.Method,
 			"path":       c.Request.URL.Path,
 			"client_ip":  c.ClientIP(),
 			"user_agent": c.Request.UserAgent(),
+			"query":      c.Request.URL.RawQuery,
+			"headers":    c.Request.Header,
 		}).Error("Panic recovered")
-		
+
+		// Return standardized error response
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "Internal server error",
+			"success":   false,
+			"message":   "Internal server error",
+			"error":     "An unexpected error occurred. Please try again later.",
+			"code":      "INTERNAL_SERVER_ERROR",
+			"timestamp": time.Now().UTC().Format(time.RFC3339),
 		})
+	})
+}
+
+// ErrorHandler middleware provides centralized error handling
+func ErrorHandler(logger Logger) gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		// Process the request
+		c.Next()
+
+		// Check if there are any errors
+		if len(c.Errors) > 0 {
+			// Get the last error (most recent)
+			err := c.Errors.Last()
+
+			// Log the error with context
+			logFields := map[string]interface{}{
+				"method":     c.Request.Method,
+				"path":       c.Request.URL.Path,
+				"client_ip":  c.ClientIP(),
+				"user_agent": c.Request.UserAgent(),
+				"query":      c.Request.URL.RawQuery,
+			}
+
+			// Add user context if available
+			if userID, exists := c.Get("user_id"); exists {
+				logFields["user_id"] = userID
+			}
+			if username, exists := c.Get("username"); exists {
+				logFields["username"] = username
+			}
+
+			// Handle different error types
+			switch e := err.Err.(type) {
+			case *errors.AppError:
+				// Application error - log and return structured response
+				logger.WithFields(logFields).WithField("error_type", e.Type).Error(e.Message)
+
+				if !c.Writer.Written() {
+					c.JSON(e.Code, gin.H{
+						"success":   false,
+						"message":   e.Message,
+						"error":     e.Message,
+						"code":      e.Type,
+						"timestamp": time.Now().UTC().Format(time.RFC3339),
+					})
+				}
+
+			case *errors.ValidationErrors:
+				// Validation errors - return detailed validation response
+				logger.WithFields(logFields).Error("Validation failed")
+
+				if !c.Writer.Written() {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"success":    false,
+						"message":    "Validation failed",
+						"error":      "Please check your input and try again",
+						"code":       "VALIDATION_ERROR",
+						"timestamp":  time.Now().UTC().Format(time.RFC3339),
+						"validation": e.Errors,
+					})
+				}
+
+			default:
+				// Unknown error - log as internal server error
+				logger.WithFields(logFields).Error(fmt.Sprintf("Unhandled error: %v", e))
+
+				if !c.Writer.Written() {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"success":   false,
+						"message":   "Internal server error",
+						"error":     "An unexpected error occurred. Please try again later.",
+						"code":      "INTERNAL_SERVER_ERROR",
+						"timestamp": time.Now().UTC().Format(time.RFC3339),
+					})
+				}
+			}
+		}
+	})
+}
+
+// PanicRecovery middleware provides enhanced panic recovery with stack traces
+func PanicRecovery(logger Logger) gin.HandlerFunc {
+	return gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+		// Capture stack trace
+		stack := debug.Stack()
+
+		// Log the panic with full context and stack trace
+		logger.WithFields(map[string]interface{}{
+			"panic":      recovered,
+			"method":     c.Request.Method,
+			"path":       c.Request.URL.Path,
+			"client_ip":  c.ClientIP(),
+			"user_agent": c.Request.UserAgent(),
+			"query":      c.Request.URL.RawQuery,
+			"stack":      string(stack),
+		}).Error("Panic recovered with stack trace")
+
+		// Return standardized error response
+		if !c.Writer.Written() {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success":   false,
+				"message":   "Internal server error",
+				"error":     "An unexpected error occurred. Please try again later.",
+				"code":      "PANIC_RECOVERED",
+				"timestamp": time.Now().UTC().Format(time.RFC3339),
+			})
+		}
 	})
 }
 
@@ -119,10 +236,7 @@ func AuthRequired(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			logger.WithField("path", c.Request.URL.Path).Error("Missing authorization header")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error":   "Authorization header required",
-			})
+			c.Error(errors.ErrUnauthorized)
 			c.Abort()
 			return
 		}
@@ -131,10 +245,7 @@ func AuthRequired(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			logger.WithField("header", authHeader).Error("Invalid authorization header format")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error":   "Invalid authorization header format",
-			})
+			c.Error(errors.ErrTokenInvalid)
 			c.Abort()
 			return
 		}
@@ -142,11 +253,8 @@ func AuthRequired(jwtManager JWTManager, logger Logger) gin.HandlerFunc {
 		token := tokenParts[1]
 		claims, err := jwtManager.ValidateToken(token)
 		if err != nil {
-			logger.WithError(err).Error("Token validation failed")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error":   "Invalid or expired token",
-			})
+			logger.WithField("error", err.Error()).Error("Token validation failed")
+			c.Error(errors.ErrTokenInvalid)
 			c.Abort()
 			return
 		}
@@ -207,10 +315,7 @@ func RoleRequired(requiredRole int, logger Logger) gin.HandlerFunc {
 		userRole, exists := c.Get("role")
 		if !exists {
 			logger.Error("Role check failed: no role in context")
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"success": false,
-				"error":   "Authentication required",
-			})
+			c.Error(errors.ErrUnauthorized)
 			c.Abort()
 			return
 		}
@@ -222,11 +327,8 @@ func RoleRequired(requiredRole int, logger Logger) gin.HandlerFunc {
 				"required_role": requiredRole,
 				"path":          c.Request.URL.Path,
 			}).Error("Insufficient permissions")
-			
-			c.JSON(http.StatusForbidden, gin.H{
-				"success": false,
-				"error":   "Insufficient permissions",
-			})
+
+			c.Error(errors.ErrForbidden)
 			c.Abort()
 			return
 		}
