@@ -8,7 +8,9 @@ import (
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/handlers"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/repository"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/content/service"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/auth"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
+	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/redis"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/database"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
 	"github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/middleware"
@@ -74,6 +76,55 @@ func main() {
 	quizHandler := handlers.NewQuizHandler()
 	mediaHandler := handlers.NewMediaHandler(mediaGenerator)
 
+	// Initialize enhanced JWT manager and authorization manager
+	var jwtManager *auth.JWTManager
+	var authManager *auth.AuthorizationManager
+
+	// Initialize Redis client if enabled
+	if cfg.Redis.Enabled {
+		redisConfig := &redis.Config{
+			Host:         cfg.Redis.Host,
+			Port:         cfg.Redis.Port,
+			Password:     cfg.Redis.Password,
+			Database:     cfg.Redis.Database,
+			PoolSize:     cfg.Redis.PoolSize,
+			MinIdleConns: cfg.Redis.MinIdleConns,
+			MaxRetries:   cfg.Redis.MaxRetries,
+			DialTimeout:  cfg.Redis.DialTimeout,
+			ReadTimeout:  cfg.Redis.ReadTimeout,
+			WriteTimeout: cfg.Redis.WriteTimeout,
+		}
+
+		redisClient, err := redis.NewClient(redisConfig)
+		if err != nil {
+			logger.WithError(err).Warn("Failed to connect to Redis, JWT features will be limited")
+			jwtManager = auth.NewJWTManagerWithoutRedis(
+				cfg.Auth.JWTSecret,
+				cfg.Auth.AccessTokenExpiration,
+				cfg.Auth.RefreshTokenExpiration,
+				cfg.Auth.JWTIssuer,
+			)
+		} else {
+			jwtManager = auth.NewJWTManager(
+				cfg.Auth.JWTSecret,
+				cfg.Auth.AccessTokenExpiration,
+				cfg.Auth.RefreshTokenExpiration,
+				redisClient.Client,
+				cfg.Auth.JWTIssuer,
+			)
+			logger.Info("Redis connected successfully for JWT token management")
+		}
+	} else {
+		jwtManager = auth.NewJWTManagerWithoutRedis(
+			cfg.Auth.JWTSecret,
+			cfg.Auth.AccessTokenExpiration,
+			cfg.Auth.RefreshTokenExpiration,
+			cfg.Auth.JWTIssuer,
+		)
+	}
+
+	authManager = auth.NewAuthorizationManager()
+
 	// Set up Gin router with centralized error handling
 	router := gin.New()
 
@@ -83,42 +134,133 @@ func main() {
 	router.Use(middleware.RequestLogger())
 	router.Use(middleware.SecurityHeaders())
 
-	// Define API routes
-	router.GET("/books", bookHandlers.GetAllBooks)
-	router.GET("/books/:id", bookHandlers.GetBookByID)
-	router.GET("/books/:id/chapters", bookHandlers.GetBookChapters)
-	router.GET("/books/chapters/:id", bookHandlers.GetChapterByID)
-	router.GET("/books/sections/:id", bookHandlers.GetSectionByID)
+	// Public API routes - no authentication required
+	public := router.Group("/public")
+	{
+		public.GET("/books", bookHandlers.GetAllBooks)
+		public.GET("/books/:id", bookHandlers.GetBookByID)
+		public.GET("/books/:id/chapters", bookHandlers.GetBookChapters)
+		public.GET("/books/chapters/:id", bookHandlers.GetChapterByID)
+		public.GET("/books/sections/:id", bookHandlers.GetSectionByID)
+		public.GET("/feedback/summary", feedbackHandler.GetContentFeedbackSummary)
+	}
+
+	// Content reading routes - require basic authentication
+	content := router.Group("/content")
+	content.Use(middleware.AuthRequired(jwtManager, logger))
+	{
+		content.GET("/books",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookHandlers.GetAllBooks)
+		content.GET("/books/:id",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookHandlers.GetBookByID)
+		content.GET("/books/:id/chapters",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookHandlers.GetBookChapters)
+		content.GET("/books/chapters/:id",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookHandlers.GetChapterByID)
+		content.GET("/books/sections/:id",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookHandlers.GetSectionByID)
+	}
 
 	// Register interactive elements routes
 	apiGroup := router.Group("/api")
 	quizHandler.RegisterRoutes(apiGroup)
 	mediaHandler.RegisterRoutes(apiGroup)
 
-	// Get content feedback summary for anyone
-	router.GET("/feedback/summary", feedbackHandler.GetContentFeedbackSummary)
-
-	// Protected routes
-	protected := router.Group("/")
-	protected.Use(middleware.JWTAuth())
+	// User content interaction routes - require authentication and content permissions
+	userContent := router.Group("/user")
+	userContent.Use(middleware.AuthRequired(jwtManager, logger))
 	{
 		// Book progress routes
-		protected.POST("/books/:id/progress", progressHandler.UpdateProgress)
-		protected.GET("/books/:id/progress", progressHandler.GetProgress)
+		userContent.POST("/books/:id/progress",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			progressHandler.UpdateProgress)
+		userContent.GET("/books/:id/progress",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			progressHandler.GetProgress)
 
 		// Bookmark routes
-		protected.POST("/books/:id/bookmarks", bookmarkHandler.CreateBookmark)
-		protected.GET("/books/:id/bookmarks", bookmarkHandler.GetBookmarks)
-		protected.DELETE("/books/:id/bookmarks/:bookmarkId", bookmarkHandler.DeleteBookmark)
+		userContent.POST("/books/:id/bookmarks",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookmarkHandler.CreateBookmark)
+		userContent.GET("/books/:id/bookmarks",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookmarkHandler.GetBookmarks)
+		userContent.DELETE("/books/:id/bookmarks/:bookmarkId",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			bookmarkHandler.DeleteBookmark)
 
 		// Note routes
-		protected.POST("/books/:id/notes", noteHandler.CreateNote)
-		protected.GET("/books/:id/notes", noteHandler.GetNotes)
-		protected.GET("/notes/:noteId", noteHandler.GetNoteByID)
-		protected.PUT("/notes/:noteId", noteHandler.UpdateNote)
-		protected.DELETE("/notes/:noteId", noteHandler.DeleteNote)
-		protected.GET("/notes/categories", noteHandler.GetNoteCategories)
-		protected.POST("/notes/export", noteHandler.ExportNotes)
+		userContent.POST("/books/:id/notes",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			noteHandler.CreateNote)
+		userContent.GET("/books/:id/notes",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			noteHandler.GetNotes)
+		userContent.GET("/notes/:noteId",
+			middleware.ResourceOwnerOrPermission(authManager, auth.PermissionReadContent, "note_owner_id", logger),
+			noteHandler.GetNoteByID)
+		userContent.PUT("/notes/:noteId",
+			middleware.ResourceOwnerOrPermission(authManager, auth.PermissionUpdateContent, "note_owner_id", logger),
+			noteHandler.UpdateNote)
+		userContent.DELETE("/notes/:noteId",
+			middleware.ResourceOwnerOrPermission(authManager, auth.PermissionDeleteContent, "note_owner_id", logger),
+			noteHandler.DeleteNote)
+		userContent.GET("/notes/categories",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			noteHandler.GetNoteCategories)
+		userContent.POST("/notes/export",
+			middleware.PermissionRequired(authManager, auth.PermissionReadContent, logger),
+			noteHandler.ExportNotes)
+	}
+
+	// Content creation routes - require content creation permissions
+	create := router.Group("/create")
+	create.Use(middleware.AuthRequired(jwtManager, logger))
+	create.Use(middleware.PermissionRequired(authManager, auth.PermissionCreateContent, logger))
+	{
+		// Future content creation endpoints will go here
+		create.POST("/books", func(c *gin.Context) {
+			c.JSON(501, gin.H{"message": "Content creation not yet implemented"})
+		})
+	}
+
+	// Content management routes - require content management permissions
+	manage := router.Group("/manage")
+	manage.Use(middleware.AuthRequired(jwtManager, logger))
+	manage.Use(middleware.AnyPermissionRequired(authManager, []auth.Permission{
+		auth.PermissionUpdateContent,
+		auth.PermissionDeleteContent,
+		auth.PermissionPublishContent,
+	}, logger))
+	{
+		// Future content management endpoints will go here
+		manage.PUT("/books/:id", func(c *gin.Context) {
+			c.JSON(501, gin.H{"message": "Content management not yet implemented"})
+		})
+		manage.DELETE("/books/:id", func(c *gin.Context) {
+			c.JSON(501, gin.H{"message": "Content management not yet implemented"})
+		})
+	}
+
+	// Admin content routes - require admin permissions
+	admin := router.Group("/admin")
+	admin.Use(middleware.AuthRequired(jwtManager, logger))
+	admin.Use(middleware.RoleRequired(int(auth.RoleAdmin), logger))
+	{
+		admin.GET("/content/stats", func(c *gin.Context) {
+			c.JSON(501, gin.H{"message": "Admin content stats not yet implemented"})
+		})
+		admin.POST("/content/publish/:id",
+			middleware.PermissionRequired(authManager, auth.PermissionPublishContent, logger),
+			func(c *gin.Context) {
+				c.JSON(501, gin.H{"message": "Content publishing not yet implemented"})
+			})
+	}
 
 		// Feedback routes
 		protected.POST("/feedback/mood", feedbackHandler.SubmitMoodFeedback)

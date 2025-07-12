@@ -8,6 +8,7 @@ import (
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/handlers"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/repository"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/services/auth/service"
+        "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/auth"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/config"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/database"
         "github.com/yerenwgventures/GreatNigeriaLibrary-Foundation/backend/pkg/common/logger"
@@ -79,6 +80,10 @@ func main() {
         router.Use(middleware.RequestLogger())
         router.Use(middleware.SecurityHeaders())
 
+        // Initialize enhanced JWT manager and authorization manager
+        jwtManager := userService.GetJWTManager() // We'll need to add this method
+        authManager := auth.NewAuthorizationManager()
+
         // Add health check endpoint
         router.GET("/health", func(c *gin.Context) {
                 c.JSON(200, gin.H{
@@ -116,18 +121,22 @@ func main() {
 
         // Basic user routes - require authentication
         userRoutes := router.Group("/users")
-        userRoutes.Use(middleware.JWTAuth())
+        userRoutes.Use(middleware.AuthRequired(jwtManager, logger))
         {
                 userRoutes.GET("/:id", userHandler.GetUser)
-                userRoutes.PATCH("/:id", userHandler.UpdateUser)
+                userRoutes.PATCH("/:id",
+                        middleware.ResourceOwnerOrPermission(authManager, auth.PermissionUpdateProfile, "user_id", logger),
+                        userHandler.UpdateUser)
                 userRoutes.GET("/:id/profile", userHandler.GetUserProfile)
         }
         
         // Account management routes - require authentication
         accountRoutes := router.Group("/account")
-        accountRoutes.Use(middleware.JWTAuth())
+        accountRoutes.Use(middleware.AuthRequired(jwtManager, logger))
         {
-                accountRoutes.DELETE("/delete", accountHandler.DeleteAccount)
+                accountRoutes.DELETE("/delete",
+                        middleware.PermissionRequired(authManager, auth.PermissionDeleteProfile, logger),
+                        accountHandler.DeleteAccount)
                 
                 // Two-factor authentication routes
                 accountRoutes.GET("/2fa/status", twoFAHandler.GetTwoFAStatus)
@@ -195,15 +204,24 @@ func main() {
         
         // Moderator routes - require moderator role or higher
         moderatorRoutes := router.Group("/moderator")
-        moderatorRoutes.Use(middleware.RoleAuth(models.RoleModerator))
+        moderatorRoutes.Use(middleware.AuthRequired(jwtManager, logger))
+        moderatorRoutes.Use(middleware.RoleRequired(int(auth.RoleModerator), logger))
         {
                 moderatorRoutes.GET("/tools", roleHandlers.GetModeratorTools)
-                
+
                 // Content access management (read-only and permissions)
-                moderatorRoutes.GET("/content/access", contentAccessHandler.GetContentAccess)
-                moderatorRoutes.GET("/content/rules", contentAccessHandler.GetContentRules)
-                moderatorRoutes.POST("/content/permissions", contentAccessHandler.GrantUserPermission)
-                moderatorRoutes.DELETE("/content/permissions/:id", contentAccessHandler.RevokeUserPermission)
+                moderatorRoutes.GET("/content/access",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.GetContentAccess)
+                moderatorRoutes.GET("/content/rules",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.GetContentRules)
+                moderatorRoutes.POST("/content/permissions",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.GrantUserPermission)
+                moderatorRoutes.DELETE("/content/permissions/:id",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.RevokeUserPermission)
                 
                 // Verification request review
                 moderatorRoutes.GET("/verification/requests", verificationHandler.GetVerificationRequests)
@@ -214,18 +232,33 @@ func main() {
 
         // Add admin routes with admin-only access
         adminRoutes := router.Group("/admin")
-        adminRoutes.Use(middleware.AdminAuth())
+        adminRoutes.Use(middleware.AuthRequired(jwtManager, logger))
+        adminRoutes.Use(middleware.RoleRequired(int(auth.RoleAdmin), logger))
         {
                 // User management
-                adminRoutes.GET("/users", userHandler.ListUsers)
-                adminRoutes.PATCH("/users/:id/role", userHandler.UpdateUserRole)
-                adminRoutes.GET("/users/role/:role", userHandler.GetUsersByRole)
-                
+                adminRoutes.GET("/users",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageUsers, logger),
+                        userHandler.ListUsers)
+                adminRoutes.PATCH("/users/:id/role",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageUsers, logger),
+                        userHandler.UpdateUserRole)
+                adminRoutes.GET("/users/role/:role",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageUsers, logger),
+                        userHandler.GetUsersByRole)
+
                 // Content access management
-                adminRoutes.POST("/content/access", contentAccessHandler.SetContentAccess)
-                adminRoutes.POST("/content/rules", contentAccessHandler.CreateContentRule)
-                adminRoutes.PUT("/content/rules", contentAccessHandler.UpdateContentRule)
-                adminRoutes.DELETE("/content/rules/:id", contentAccessHandler.DeleteContentRule)
+                adminRoutes.POST("/content/access",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.SetContentAccess)
+                adminRoutes.POST("/content/rules",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.CreateContentRule)
+                adminRoutes.PUT("/content/rules",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.UpdateContentRule)
+                adminRoutes.DELETE("/content/rules/:id",
+                        middleware.PermissionRequired(authManager, auth.PermissionManageContent, logger),
+                        contentAccessHandler.DeleteContentRule)
         }
 
         // Start server
